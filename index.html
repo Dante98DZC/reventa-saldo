@@ -112,14 +112,16 @@
 </head>
 <body>
 <div id="root"></div>
-<script type="text/babel">
-const { createClient } = supabase
-const { useState, useEffect, useCallback } = React
-
-const sb = createClient(
+<script>
+// Supabase se instancia UNA sola vez, fuera de Babel/React
+const sb = supabase.createClient(
   'https://lgtenvitmceyzcdctefd.supabase.co',
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxndGVudml0bWNleXpjZGN0ZWZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2NDM4MDksImV4cCI6MjA5MDIxOTgwOX0.5jZPJndP7yNP7BKPmUWidc7SoscqIkafw8l4B88VCiQ'
 )
+</script>
+<script type="text/babel">
+const { createClient } = supabase
+const { useState, useEffect, useCallback } = React
 
 // ── MOTORES ────────────────────────────────────────────────
 function calcularRiesgo(cliente, config) {
