@@ -259,7 +259,7 @@ function Dashboard({ sims, ventas, lotesPorSim, clientes, config }) {
 }
 
 // ── SIMS ──────────────────────────────────────────────────
-function Sims({ sims, lotesPorSim, onRefresh }) {
+function Sims({ sims, lotesPorSim, userId, onRefresh }) {
   const [modalSim, setModalSim] = useState(false)
   const [modalLote, setModalLote] = useState(null)
   const [numero, setNumero] = useState('')
@@ -271,7 +271,7 @@ function Sims({ sims, lotesPorSim, onRefresh }) {
   async function crearSim() {
     if (!numero.trim()) return setErr('Ingresa el número')
     setLoading(true); setErr('')
-    const { error } = await sb.from('sims').insert({ numero: numero.trim() })
+    const { error } = await sb.from('sims').insert({ numero: numero.trim(), user_id: userId })
     if (error) { setErr(error.message); setLoading(false); return }
     setModalSim(false); setNumero(''); onRefresh()
     setLoading(false)
@@ -351,7 +351,7 @@ function Sims({ sims, lotesPorSim, onRefresh }) {
 }
 
 // ── CLIENTES ──────────────────────────────────────────────
-function Clientes({ clientes, config, onRefresh }) {
+function Clientes({ clientes, config, userId, onRefresh }) {
   const [modal, setModal] = useState(false)
   const [nombre, setNombre] = useState('')
   const [tel, setTel] = useState('')
@@ -362,7 +362,7 @@ function Clientes({ clientes, config, onRefresh }) {
   async function crear() {
     if (!nombre.trim()) return setErr('Ingresa el nombre')
     setLoading(true); setErr('')
-    const { error } = await sb.from('clientes').insert({ nombre: nombre.trim(), telefono: tel||null })
+    const { error } = await sb.from('clientes').insert({ nombre: nombre.trim(), telefono: tel||null, user_id: userId })
     if (error) { setErr(error.message); setLoading(false); return }
     setModal(false); setNombre(''); setTel(''); onRefresh()
     setLoading(false)
@@ -713,9 +713,9 @@ function App() {
     <div className="app">
       <div style={{flex:1,overflowY:'auto'}}>
         {tab==='dashboard' && <Dashboard sims={sims} ventas={ventas} lotesPorSim={lotesPorSim} clientes={clientes} config={config}/>}
-        {tab==='sims'      && <Sims sims={sims} lotesPorSim={lotesPorSim} onRefresh={refrescar}/>}
-        {tab==='ventas'    && <Ventas sims={sims} clientes={clientes} lotesPorSim={lotesPorSim} config={config} onRefresh={refrescar}/>}
-        {tab==='clientes'  && <Clientes clientes={clientes} config={config} onRefresh={refrescar}/>}
+        {tab==='sims'      && <Sims sims={sims} lotesPorSim={lotesPorSim} userId={user.id} onRefresh={refrescar}/>}
+        {tab==='ventas'    && <Ventas sims={sims} clientes={clientes} lotesPorSim={lotesPorSim} config={config} userId={user.id} onRefresh={refrescar}/>}
+        {tab==='clientes'  && <Clientes clientes={clientes} config={config} userId={user.id} onRefresh={refrescar}/>}
         {tab==='historial' && <Historial ventas={ventas} sims={sims} clientes={clientes} onRefresh={refrescar}/>}
       </div>
       <div style={{position:'sticky',bottom:0}}>
