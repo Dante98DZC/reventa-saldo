@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ReventaSaldo</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Segoe UI',sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh}
+  .app{max-width:480px;margin:0 auto;min-height:100vh;background:#1e293b;position:relative}
+
+  /* Auth */
+  .auth{padding:2rem;display:flex;flex-direction:column;gap:1.5rem;min-height:100vh;justify-content:center}
+  .auth-logo{text-align:center;margin-bottom:1rem}
+  .auth-logo h1{font-size:1.8rem;font-weight:800;color:#38bdf8}
+  .auth-logo p{color:#94a3b8;font-size:.9rem;margin-top:.3rem}
+  .auth-tabs{display:flex;gap:.5rem;background:#0f172a;border-radius:10px;padding:.3rem}
+  .auth-tab{flex:1;padding:.6rem;border:none;border-radius:8px;cursor:pointer;font-size:.9rem;font-weight:600;transition:.2s;background:transparent;color:#64748b}
+  .auth-tab.active{background:#38bdf8;color:#0f172a}
+
+  /* Forms */
+  .form-group{display:flex;flex-direction:column;gap:.4rem}
+  .form-group label{font-size:.8rem;color:#94a3b8;font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+  input,select{background:#0f172a;border:1.5px solid #334155;border-radius:8px;padding:.75rem 1rem;color:#e2e8f0;font-size:.95rem;width:100%;outline:none;transition:.2s}
+  input:focus,select:focus{border-color:#38bdf8}
+  select option{background:#0f172a}
+
+  /* Buttons */
+  .btn{padding:.75rem 1.5rem;border:none;border-radius:8px;cursor:pointer;font-size:.95rem;font-weight:600;transition:.2s;width:100%}
+  .btn-primary{background:#38bdf8;color:#0f172a}
+  .btn-primary:hover{background:#7dd3fc}
+  .btn-primary:disabled{background:#334155;color:#64748b;cursor:not-allowed}
+  .btn-secondary{background:#334155;color:#e2e8f0}
+  .btn-secondary:hover{background:#475569}
+  .btn-danger{background:#ef4444;color:#fff}
+  .btn-sm{padding:.4rem .8rem;font-size:.8rem;width:auto}
+  .btn-success{background:#22c55e;color:#fff}
+
+  /* Nav */
+  .nav{display:flex;background:#0f172a;border-top:1px solid #1e293b;position:sticky;bottom:0}
+  .nav-item{flex:1;display:flex;flex-direction:column;align-items:center;padding:.7rem .3rem;cursor:pointer;border:none;background:transparent;color:#64748b;font-size:.65rem;gap:.2rem;transition:.2s}
+  .nav-item.active{color:#38bdf8}
+  .nav-item svg{width:20px;height:20px}
+
+  /* Cards */
+  .card{background:#0f172a;border-radius:12px;padding:1.2rem;border:1px solid #1e293b}
+  .card-grid{display:grid;grid-template-columns:1fr 1fr;gap:.8rem}
+  .metric{background:#0f172a;border-radius:12px;padding:1rem;border:1px solid #1e293b}
+  .metric-label{font-size:.72rem;color:#64748b;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.3rem}
+  .metric-value{font-size:1.4rem;font-weight:800}
+  .metric-value.green{color:#22c55e}
+  .metric-value.blue{color:#38bdf8}
+  .metric-value.yellow{color:#fbbf24}
+  .metric-value.red{color:#ef4444}
+
+  /* Page */
+  .page{padding:1rem;display:flex;flex-direction:column;gap:1rem;padding-bottom:5rem}
+  .page-header{display:flex;align-items:center;justify-content:space-between;padding:.5rem 0}
+  .page-title{font-size:1.1rem;font-weight:700}
+
+  /* List items */
+  .list-item{background:#0f172a;border-radius:10px;padding:1rem;border:1px solid #1e293b;display:flex;align-items:center;gap:.8rem}
+  .list-item-info{flex:1}
+  .list-item-title{font-weight:600;font-size:.95rem}
+  .list-item-sub{font-size:.78rem;color:#64748b;margin-top:.15rem}
+  .badge{display:inline-block;padding:.2rem .6rem;border-radius:999px;font-size:.7rem;font-weight:700}
+  .badge-green{background:#064e3b;color:#34d399}
+  .badge-yellow{background:#451a03;color:#fbbf24}
+  .badge-red{background:#450a0a;color:#f87171}
+  .badge-blue{background:#0c2a4a;color:#38bdf8}
+
+  /* Modal */
+  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:flex-end;z-index:100}
+  .modal{background:#1e293b;border-radius:16px 16px 0 0;padding:1.5rem;width:100%;max-width:480px;margin:0 auto;display:flex;flex-direction:column;gap:1rem;max-height:90vh;overflow-y:auto}
+  .modal-title{font-size:1.1rem;font-weight:700}
+
+  /* Alert */
+  .alert{padding:.8rem 1rem;border-radius:8px;font-size:.85rem;border:1px solid}
+  .alert-error{background:#450a0a;border-color:#ef4444;color:#fca5a5}
+  .alert-success{background:#064e3b;border-color:#22c55e;color:#86efac}
+  .alert-warning{background:#451a03;border-color:#f59e0b;color:#fcd34d}
+
+  /* SIM card */
+  .sim-card{background:#0f172a;border-radius:12px;padding:1.2rem;border:1px solid #1e293b}
+  .sim-number{font-size:1rem;font-weight:700;color:#38bdf8;margin-bottom:.5rem}
+  .sim-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.5rem;margin-top:.8rem}
+  .sim-stat{text-align:center}
+  .sim-stat-val{font-size:1rem;font-weight:700}
+  .sim-stat-label{font-size:.65rem;color:#64748b;margin-top:.1rem}
+  .recargas-bar{display:flex;gap:.2rem;margin-top:.8rem}
+  .recarga-dot{height:6px;flex:1;border-radius:3px;background:#1e293b}
+  .recarga-dot.used{background:#38bdf8}
+
+  /* Venta flow */
+  .tipo-btn{flex:1;padding:1rem;border-radius:10px;border:2px solid #334155;background:#0f172a;color:#e2e8f0;font-size:1rem;font-weight:700;cursor:pointer;transition:.2s;text-align:center}
+  .tipo-btn.selected{border-color:#38bdf8;background:#0c2a4a;color:#38bdf8}
+  .tipo-btn:hover{border-color:#475569}
+  .resumen-box{background:#0f172a;border-radius:10px;padding:1rem;border:1px solid #1e293b;display:flex;flex-direction:column;gap:.6rem}
+  .resumen-row{display:flex;justify-content:space-between;font-size:.9rem}
+  .resumen-row.highlight{font-weight:700;font-size:1rem;color:#22c55e;border-top:1px solid #1e293b;padding-top:.6rem;margin-top:.2rem}
+
+  .divider{height:1px;background:#1e293b;margin:.3rem 0}
+  .section-title{font-size:.75rem;color:#64748b;text-transform:uppercase;letter-spacing:.05em;font-weight:700}
+  .empty{text-align:center;color:#475569;padding:2rem;font-size:.9rem}
+  .spinner{display:inline-block;width:18px;height:18px;border:2px solid #334155;border-top-color:#38bdf8;border-radius:50%;animation:spin .7s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { createClient } = supabase
+const { useState, useEffect, useCallback } = React
+
+const sb = createClient(
+  'https://lgtenvitmceyzcdctefd.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxndGVudml0bWNleXpjZGN0ZWZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2NDM4MDksImV4cCI6MjA5MDIxOTgwOX0.5jZPJndP7yNP7BKPmUWidc7SoscqIkafw8l4B88VCiQ'
+)
+
+// ── MOTORES ────────────────────────────────────────────────
+function calcularRiesgo(cliente, config) {
+  if (!cliente.fecha_ultima_compra) return { score: 0, nivel: 'bajo' }
+  const limite = config?.limite_deuda_cliente || 500
+  const umbral = config?.umbral_riesgo_bloqueo || 70
+  const dias_inactivo = (Date.now() - new Date(cliente.fecha_ultima_compra)) / 86400000
+  const s1 = Math.min((cliente.deuda_total / limite) * 100, 100) * 0.5
+  const s2 = Math.min((cliente.dias_promedio_pago / 30) * 100, 100) * 0.3
+  const s3 = Math.min((dias_inactivo / 30) * 100, 100) * 0.2
+  const score = Math.round(s1 + s2 + s3)
+  const nivel = score >= umbral ? 'alto' : score >= 31 ? 'medio' : 'bajo'
+  return { score, nivel }
+}
+
+function cppSim(lotes) {
+  const total_qty = lotes.reduce((s, l) => s + Number(l.cantidad), 0)
+  if (total_qty === 0) return 0
+  const total_cost = lotes.reduce((s, l) => s + Number(l.cantidad) * Number(l.costo_unitario), 0)
+  return total_cost / total_qty
+}
+
+function precioSugerido(costo_real, tipo, config) {
+  const margenes = { 120: config?.margen_tipo_120||25, 240: config?.margen_tipo_240||20, 360: config?.margen_tipo_360||15 }
+  return +(costo_real * (1 + margenes[tipo] / 100)).toFixed(2)
+}
+
+function seleccionOptima(sims, lotesPorSim, cliente, tipo, config) {
+  const riesgo = calcularRiesgo(cliente, config)
+  const costo_op = config?.costo_operativo || 5
+  const bloqueado = riesgo.nivel === 'alto' || cliente.deuda_total >= (config?.limite_deuda_cliente || 500)
+
+  const candidatas = sims.filter(s =>
+    s.activa &&
+    s.recargas_restantes > 0 &&
+    s.saldo_disponible >= tipo + costo_op
+  ).map(s => {
+    const lotes = lotesPorSim[s.id] || []
+    const cpp = cppSim(lotes)
+    const costo_real = +(cpp * tipo).toFixed(4)
+    const precio = precioSugerido(costo_real, tipo, config)
+    const ganancia = +(precio - costo_real - costo_op).toFixed(2)
+    return { ...s, cpp, costo_real, precio, ganancia }
+  }).sort((a, b) => b.ganancia - a.ganancia)
+
+  return { bloqueado, riesgo, candidatas }
+}
+
+// ── COMPONENTES BASE ──────────────────────────────────────
+function Modal({ title, onClose, children }) {
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal" onClick={e => e.stopPropagation()}>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+          <span className="modal-title">{title}</span>
+          <button onClick={onClose} style={{background:'none',border:'none',color:'#64748b',fontSize:'1.2rem',cursor:'pointer'}}>✕</button>
+        </div>
+        {children}
+      </div>
+    </div>
+  )
+}
+
+// ── AUTH ──────────────────────────────────────────────────
+function Auth({ onAuth }) {
+  const [tab, setTab] = useState('login')
+  const [email, setEmail] = useState('')
+  const [pass, setPass] = useState('')
+  const [err, setErr] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [ok, setOk] = useState('')
+
+  async function submit() {
+    setErr(''); setOk(''); setLoading(true)
+    if (tab === 'login') {
+      const { data, error } = await sb.auth.signInWithPassword({ email, password: pass })
+      if (error) setErr(error.message)
+      else onAuth(data.user)
+    } else {
+      const { error } = await sb.auth.signUp({ email, password: pass })
+      if (error) setErr(error.message)
+      else setOk('Revisa tu correo para confirmar tu cuenta.')
+    }
+    setLoading(false)
+  }
+
+  return (
+    <div className="auth">
+      <div className="auth-logo">
+        <h1>📶 ReventaSaldo</h1>
+        <p>Gestión inteligente de saldo móvil</p>
+      </div>
+      <div className="auth-tabs">
+        <button className={`auth-tab ${tab==='login'?'active':''}`} onClick={()=>setTab('login')}>Entrar</button>
+        <button className={`auth-tab ${tab==='register'?'active':''}`} onClick={()=>setTab('register')}>Registrarse</button>
+      </div>
+      {err && <div className="alert alert-error">{err}</div>}
+      {ok && <div className="alert alert-success">{ok}</div>}
+      <div className="form-group">
+        <label>Correo</label>
+        <input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="correo@ejemplo.com"/>
+      </div>
+      <div className="form-group">
+        <label>Contraseña</label>
+        <input type="password" value={pass} onChange={e=>setPass(e.target.value)} placeholder="••••••••"/>
+      </div>
+      <button className="btn btn-primary" onClick={submit} disabled={loading}>
+        {loading ? <span className="spinner"/> : tab==='login' ? 'Entrar' : 'Crear cuenta'}
+      </button>
+    </div>
+  )
+}
+
+// ── DASHBOARD ─────────────────────────────────────────────
+function Dashboard({ sims, ventas, lotesPorSim, clientes, config }) {
+  const saldo_total = sims.reduce((s, sim) => s + Number(sim.saldo_disponible), 0)
+  const inversion = Object.values(lotesPorSim).flat().reduce((s, l) => s + Number(l.costo_total), 0)
+  const ganancia_total = ventas.filter(v=>v.estado_pago==='pagado').reduce((s,v)=>s+Number(v.ganancia),0)
+  const hoy = new Date().toDateString()
+  const ganancia_hoy = ventas.filter(v=>v.estado_pago==='pagado'&&new Date(v.fecha).toDateString()===hoy).reduce((s,v)=>s+Number(v.ganancia),0)
+  const pendiente = ventas.filter(v=>v.estado_pago==='pendiente').reduce((s,v)=>s+Number(v.precio_venta),0)
+  const recargas_hoy = sims.reduce((s,sim)=>s+sim.recargas_restantes,0)
+  const en_riesgo = clientes.filter(c=>calcularRiesgo(c,config).nivel==='alto').length
+
+  return (
+    <div className="page">
+      <div className="page-header">
+        <span className="page-title">Dashboard</span>
+        <span style={{fontSize:'.8rem',color:'#64748b'}}>{new Date().toLocaleDateString('es',{weekday:'short',day:'numeric',month:'short'})}</span>
+      </div>
+      <div className="card-grid">
+        <div className="metric">
+          <div className="metric-label">Saldo total</div>
+          <div className="metric-value blue">{saldo_total.toLocaleString()}</div>
+          <div style={{fontSize:'.72rem',color:'#64748b',marginTop:'.2rem'}}>créditos</div>
+        </div>
+        <div className="metric">
+          <div className="metric-label">Ganancia hoy</div>
+          <div className="metric-value green">${ganancia_hoy.toFixed(2)}</div>
+        </div>
+        <div className="metric">
+          <div className="metric-label">Ganancia total</div>
+          <div className="metric-value green">${ganancia_total.toFixed(2)}</div>
+        </div>
+        <div className="metric">
+          <div className="metric-label">Por cobrar</div>
+          <div className="metric-value yellow">${pendiente.toFixed(2)}</div>
+        </div>
+        <div className="metric">
+          <div className="metric-label">Recargas hoy</div>
+          <div className="metric-value blue">{recargas_hoy}</div>
+          <div style={{fontSize:'.72rem',color:'#64748b',marginTop:'.2rem'}}>disponibles</div>
+        </div>
+        <div className="metric">
+          <div className="metric-label">Clientes riesgo</div>
+          <div className={`metric-value ${en_riesgo>0?'red':'green'}`}>{en_riesgo}</div>
+        </div>
+      </div>
+
+      <div className="section-title">SIMs activas</div>
+      {sims.filter(s=>s.activa).map(sim => {
+        const dots = Array.from({length: sim.limite_diario}, (_,i) => i < sim.recargas_restantes)
+        return (
+          <div key={sim.id} className="sim-card">
+            <div className="sim-number">📱 {sim.numero}</div>
+            <div className="sim-stats">
+              <div className="sim-stat">
+                <div className="sim-stat-val blue">{Number(sim.saldo_disponible).toLocaleString()}</div>
+                <div className="sim-stat-label">créditos</div>
+              </div>
+              <div className="sim-stat">
+                <div className="sim-stat-val">{sim.recargas_restantes}/{sim.limite_diario}</div>
+                <div className="sim-stat-label">recargas hoy</div>
+              </div>
+              <div className="sim-stat">
+                <div className="sim-stat-val">{sim.uso_total}</div>
+                <div className="sim-stat-label">total ventas</div>
+              </div>
+            </div>
+            <div className="recargas-bar">
+              {dots.map((used,i)=><div key={i} className={`recarga-dot ${used?'used':''}`}/>)}
+            </div>
+          </div>
+        )
+      })}
+      {sims.filter(s=>s.activa).length === 0 && <div className="empty">Sin SIMs registradas</div>}
+    </div>
+  )
+}
+
+// ── SIMS ─────────────────────────────────────────────────
+function Sims({ sims, lotesPorSim, onRefresh }) {
+  const [modalSim, setModalSim] = useState(false)
+  const [modalLote, setModalLote] = useState(null)
+  const [numero, setNumero] = useState('')
+  const [cantidad, setCantidad] = useState('')
+  const [costo, setCosto] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [err, setErr] = useState('')
+
+  async function crearSim() {
+    if (!numero.trim()) return setErr('Ingresa el número')
+    setLoading(true); setErr('')
+    const { error } = await sb.from('sims').insert({ numero: numero.trim() })
+    if (error) setErr(error.message)
+    else { setModalSim(false); setNumero(''); onRefresh() }
+    setLoading(false)
+  }
+
+  async function cargarLote() {
+    if (!cantidad || !costo) return setErr('Completa todos los campos')
+    setLoading(true); setErr('')
+    const { error } = await sb.rpc('cargar_lote', {
+      p_sim_id: modalLote.id,
+      p_cantidad: Number(cantidad),
+      p_costo_total: Number(costo)
+    })
+    if (error) setErr(error.message)
+    else { setModalLote(null); setCantidad(''); setCosto(''); onRefresh() }
+    setLoading(false)
+  }
+
+  return (
+    <div className="page">
+      <div className="page-header">
+        <span className="page-title">Mis SIMs</span>
+        <button className="btn btn-primary btn-sm" onClick={()=>setModalSim(true)}>+ SIM</button>
+      </div>
+
+      {sims.map(sim => {
+        const lotes = lotesPorSim[sim.id] || []
+        const cpp = cppSim(lotes)
+        const dots = Array.from({length: sim.limite_diario}, (_,i) => i < sim.recargas_restantes)
+        return (
+          <div key={sim.id} className="sim-card">
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start'}}>
+              <div className="sim-number">📱 {sim.numero}</div>
+              <button className="btn btn-secondary btn-sm" onClick={()=>{setModalLote(sim);setErr('')}}>+ Cargar saldo</button>
+            </div>
+            <div className="sim-stats">
+              <div className="sim-stat">
+                <div className="sim-stat-val blue">{Number(sim.saldo_disponible).toLocaleString()}</div>
+                <div className="sim-stat-label">créditos</div>
+              </div>
+              <div className="sim-stat">
+                <div className="sim-stat-val">{sim.recargas_restantes}/{sim.limite_diario}</div>
+                <div className="sim-stat-label">recargas hoy</div>
+              </div>
+              <div className="sim-stat">
+                <div className="sim-stat-val">{cpp > 0 ? `$${cpp.toFixed(4)}` : '—'}</div>
+                <div className="sim-stat-label">costo/créd.</div>
+              </div>
+            </div>
+            <div className="recargas-bar">
+              {dots.map((used,i)=><div key={i} className={`recarga-dot ${used?'used':''}`}/>)}
+            </div>
+            {lotes.length > 0 && (
+              <div style={{marginTop:'.8rem'}}>
+                <div className="section-title" style={{marginBottom:'.4rem'}}>Lotes cargados</div>
+                {lotes.map(l=>(
+                  <div key={l.id} style={{display:'flex',justifyContent:'space-between',fontSize:'.8rem',color:'#94a3b8',padding:'.3rem 0',borderBottom:'1px solid #1e293b'}}>
+                    <span>{new Date(l.fecha_compra).toLocaleDateString('es')}</span>
+                    <span>{Number(l.cantidad).toLocaleString()} cr.</span>
+                    <span>${Number(l.costo_total).toFixed(2)}</span>
+                    <span style={{color:'#64748b'}}>${Number(l.costo_unitario).toFixed(4)}/cr</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )
+      })}
+      {sims.length === 0 && <div className="empty">No tienes SIMs registradas.<br/>Agrega tu primera SIM.</div>}
+
+      {modalSim && (
+        <Modal title="Nueva SIM" onClose={()=>setModalSim(false)}>
+          {err && <div className="alert alert-error">{err}</div>}
+          <div className="form-group">
+            <label>Número de teléfono</label>
+            <input value={numero} onChange={e=>setNumero(e.target.value)} placeholder="+52 555 000 0000"/>
+          </div>
+          <button className="btn btn-primary" onClick={crearSim} disabled={loading}>
+            {loading ? <span className="spinner"/> : 'Guardar SIM'}
+          </button>
+        </Modal>
+      )}
+
+      {modalLote && (
+        <Modal title={`Cargar saldo a ${modalLote.numero}`} onClose={()=>setModalLote(null)}>
+          {err && <div className="alert alert-error">{err}</div>}
+          <div className="form-group">
+            <label>Créditos comprados</label>
+            <input type="number" value={cantidad} onChange={e=>setCantidad(e.target.value)} placeholder="Ej: 1000"/>
+          </div>
+          <div className="form-group">
+            <label>Dinero pagado ($)</label>
+            <input type="number" value={costo} onChange={e=>setCosto(e.target.value)} placeholder="Ej: 85.00"/>
+          </div>
+          {cantidad && costo && Number(cantidad) > 0 && (
+            <div className="alert alert-success">
+              Costo unitario: ${(Number(costo)/Number(cantidad)).toFixed(4)} por crédito
+            </div>
+          )}
+          <button className="btn btn-primary" onClick={cargarLote} disabled={loading}>
+            {loading ? <span className="spinner"/> : 'Cargar saldo'}
+          </button>
+        </Modal>
+      )}
+    </div>
+  )
+}
+
+// ── CLIENTES ──────────────────────────────────────────────
+function Clientes({ clientes, config, onRefresh }) {
+  const [modal, setModal] = useState(false)
+  const [nombre, setNombre] = useState('')
+  const [tel, setTel] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [err, setErr] = useState('')
+  const [buscar, setBuscar] = useState('')
+
+  async function crear() {
+    if (!nombre.trim()) return setErr('Ingresa el nombre')
+    setLoading(true); setErr('')
+    const { error } = await sb.from('clientes').insert({ nombre: nombre.trim(), telefono: tel||null })
+    if (error) setErr(error.message)
+    else { setModal(false); setNombre(''); setTel(''); onRefresh() }
+    setLoading(false)
+  }
+
+  const filtrados = clientes.filter(c=>
+    c.nombre.toLowerCase().includes(buscar.toLowerCase()) ||
+    (c.telefono||'').includes(buscar)
+  )
+
+  const nivelColor = { bajo:'badge-green', medio:'badge-yellow', alto:'badge-red' }
+
+  return (
+    <div className="page">
+      <div className="page-header">
+        <span className="page-title">Clientes</span>
+        <button className="btn btn-primary btn-sm" onClick={()=>setModal(true)}>+ Cliente</button>
+      </div>
+      <input value={buscar} onChange={e=>setBuscar(e.target.value)} placeholder="🔍 Buscar por nombre o teléfono..."/>
+
+      {filtrados.map(c => {
+        const { score, nivel } = calcularRiesgo(c, config)
+        return (
+          <div key={c.id} className="list-item">
+            <div style={{width:40,height:40,borderRadius:'50%',background:'#1e293b',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'1.1rem',flexShrink:0}}>
+              {c.nombre.charAt(0).toUpperCase()}
+            </div>
+            <div className="list-item-info">
+              <div className="list-item-title">{c.nombre}</div>
+              <div className="list-item-sub">{c.telefono || 'Sin teléfono'} · {c.total_compras} compras</div>
+            </div>
+            <div style={{textAlign:'right'}}>
+              {c.deuda_total > 0 && <div style={{color:'#fbbf24',fontWeight:700,fontSize:'.9rem'}}>${Number(c.deuda_total).toFixed(2)}</div>}
+              <span className={`badge ${nivelColor[nivel]}`}>{nivel}</span>
+            </div>
+          </div>
+        )
+      })}
+      {filtrados.length === 0 && <div className="empty">Sin clientes{buscar?' que coincidan':' registrados'}</div>}
+
+      {modal && (
+        <Modal title="Nuevo cliente" onClose={()=>setModal(false)}>
+          {err && <div className="alert alert-error">{err}</div>}
+          <div className="form-group">
+            <label>Nombre</label>
+            <input value={nombre} onChange={e=>setNombre(e.target.value)} placeholder="Nombre del cliente"/>
+          </div>
+          <div className="form-group">
+            <label>Teléfono (opcional)</label>
+            <input value={tel} onChange={e=>setTel(e.target.value)} placeholder="+52 555 000 0000"/>
+          </div>
+          <button className="btn btn-primary" onClick={crear} disabled={loading}>
+            {loading ? <span className="spinner"/> : 'Guardar'}
+          </button>
+        </Modal>
+      )}
+    </div>
+  )
+}
+
+// ── VENTAS ────────────────────────────────────────────────
+function Ventas({ sims, clientes, lotesPorSim, config, onRefresh }) {
+  const [paso, setPaso] = useState(1) // 1=cliente 2=tipo 3=resumen
+  const [clienteSel, setClienteSel] = useState(null)
+  const [tipo, setTipo] = useState(null)
+  const [resultado, setResultado] = useState(null)
+  const [precioEdit, setPrecioEdit] = useState('')
+  const [buscar, setBuscar] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [err, setErr] = useState('')
+  const [ok, setOk] = useState('')
+  const [forzar, setForzar] = useState(false)
+
+  function reset() { setPaso(1);setClienteSel(null);setTipo(null);setResultado(null);setPrecioEdit('');setErr('');setOk('');setForzar(false) }
+
+  function selCliente(c) { setClienteSel(c); setBuscar(''); setPaso(2) }
+
+  function selTipo(t) {
+    setTipo(t)
+    const res = seleccionOptima(sims, lotesPorSim, clienteSel, t, config)
+    setResultado(res)
+    if (!res.bloqueado && res.candidatas.length > 0) {
+      setPrecioEdit(res.candidatas[0].precio.toString())
+    }
+    setPaso(3)
+  }
+
+  async function confirmar() {
+    if (!resultado || resultado.bloqueado || resultado.candidatas.length === 0) return
+    setLoading(true); setErr('')
+    const sim = resultado.candidatas[0]
+    const precio = parseFloat(precioEdit) || sim.precio
+    const { error } = await sb.rpc('registrar_venta', {
+      p_cliente_id: clienteSel.id,
+      p_sim_id: sim.id,
+      p_cantidad: tipo,
+      p_precio_venta: precio,
+      p_costo_real: sim.costo_real
+    })
+    if (error) setErr(error.message)
+    else { setOk(`✅ Venta registrada. Ganancia: $${(precio - sim.costo_real - (config?.costo_operativo||5)).toFixed(2)}`); onRefresh(); setTimeout(reset, 2500) }
+    setLoading(false)
+  }
+
+  const filtrados = clientes.filter(c=>
+    c.nombre.toLowerCase().includes(buscar.toLowerCase()) ||
+    (c.telefono||'').includes(buscar)
+  )
+
+  if (ok) return (
+    <div className="page" style={{justifyContent:'center',alignItems:'center',minHeight:'60vh'}}>
+      <div className="alert alert-success" style={{textAlign:'center',fontSize:'1rem',padding:'1.5rem'}}>{ok}</div>
+    </div>
+  )
+
+  return (
+    <div className="page">
+      <div className="page-header">
+        <span className="page-title">
+          {paso===1?'¿A quién le vendes?':paso===2?'¿Cuánto saldo?':'Confirmar venta'}
+        </span>
+        {paso > 1 && <button className="btn btn-secondary btn-sm" onClick={()=>{setPaso(p=>p-1);setErr('')}}>← Atrás</button>}
+      </div>
+
+      {err && <div className="alert alert-error">{err}</div>}
+
+      {/* PASO 1: Seleccionar cliente */}
+      {paso === 1 && (
+        <>
+          <input value={buscar} onChange={e=>setBuscar(e.target.value)} placeholder="🔍 Buscar cliente..."/>
+          {filtrados.map(c => {
+            const { nivel } = calcularRiesgo(c, config)
+            const nivelColor = { bajo:'badge-green', medio:'badge-yellow', alto:'badge-red' }
+            return (
+              <div key={c.id} className="list-item" style={{cursor:'pointer'}} onClick={()=>selCliente(c)}>
+                <div style={{width:40,height:40,borderRadius:'50%',background:'#1e293b',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'1.1rem',flexShrink:0}}>
+                  {c.nombre.charAt(0).toUpperCase()}
+                </div>
+                <div className="list-item-info">
+                  <div className="list-item-title">{c.nombre}</div>
+                  <div className="list-item-sub">Deuda: ${Number(c.deuda_total).toFixed(2)}</div>
+                </div>
+                <span className={`badge ${nivelColor[nivel]}`}>{nivel}</span>
+              </div>
+            )
+          })}
+          {clientes.length === 0 && <div className="empty">Primero registra un cliente</div>}
+        </>
+      )}
+
+      {/* PASO 2: Seleccionar tipo */}
+      {paso === 2 && (
+        <>
+          <div className="card">
+            <div style={{fontSize:'.85rem',color:'#94a3b8',marginBottom:'.5rem'}}>Cliente seleccionado</div>
+            <div style={{fontWeight:700}}>{clienteSel?.nombre}</div>
+            {clienteSel?.deuda_total > 0 && <div style={{color:'#fbbf24',fontSize:'.85rem',marginTop:'.2rem'}}>Deuda: ${Number(clienteSel.deuda_total).toFixed(2)}</div>}
+          </div>
+          {resultado?.bloqueado && !forzar && (
+            <div className="alert alert-warning">
+              ⚠️ {resultado.razon || 'Cliente con riesgo alto o deuda elevada'}
+              <button className="btn btn-secondary btn-sm" style={{marginTop:'.5rem',width:'100%'}} onClick={()=>setForzar(true)}>Continuar de todas formas</button>
+            </div>
+          )}
+          <div className="section-title">Selecciona el tipo de recarga</div>
+          <div style={{display:'flex',gap:'.8rem'}}>
+            {[120,240,360].map(t => {
+              const simsCandidatas = sims.filter(s=>s.activa&&s.recargas_restantes>0&&s.saldo_disponible>=t+(config?.costo_operativo||5))
+              const disponible = simsCandidatas.length > 0
+              return (
+                <button key={t} className={`tipo-btn ${tipo===t?'selected':''}`}
+                  style={!disponible?{opacity:.4,cursor:'not-allowed'}:{}}
+                  onClick={()=>disponible&&selTipo(t)}>
+                  <div style={{fontSize:'1.3rem',fontWeight:800}}>{t}</div>
+                  <div style={{fontSize:'.7rem',color:'#64748b',marginTop:'.2rem'}}>créditos</div>
+                  {!disponible && <div style={{fontSize:'.65rem',color:'#ef4444',marginTop:'.2rem'}}>Sin saldo</div>}
+                </button>
+              )
+            })}
+          </div>
+        </>
+      )}
+
+      {/* PASO 3: Resumen y confirmación */}
+      {paso === 3 && resultado && !resultado.bloqueado && resultado.candidatas.length > 0 && (
+        <>
+          {(() => {
+            const sim = resultado.candidatas[0]
+            const precio = parseFloat(precioEdit) || sim.precio
+            const ganancia = precio - sim.costo_real - (config?.costo_operativo||5)
+            return (
+              <>
+                <div className="resumen-box">
+                  <div className="resumen-row"><span style={{color:'#64748b'}}>Cliente</span><span style={{fontWeight:600}}>{clienteSel?.nombre}</span></div>
+                  <div className="resumen-row"><span style={{color:'#64748b'}}>Recarga</span><span style={{fontWeight:600}}>{tipo} créditos</span></div>
+                  <div className="resumen-row"><span style={{color:'#64748b'}}>SIM</span><span style={{fontWeight:600,color:'#38bdf8'}}>{sim.numero}</span></div>
+                  <div className="resumen-row"><span style={{color:'#64748b'}}>Saldo SIM</span><span>{Number(sim.saldo_disponible).toLocaleString()} cr.</span></div>
+                  <div className="resumen-row"><span style={{color:'#64748b'}}>Costo real</span><span>${sim.costo_real.toFixed(4)}</span></div>
+                  <div className="divider"/>
+                  <div className="resumen-row highlight">
+                    <span>Ganancia estimada</span>
+                    <span style={{color:ganancia>=0?'#22c55e':'#ef4444'}}>${ganancia.toFixed(2)}</span>
+                  </div>
+                </div>
+                {ganancia < 0 && <div className="alert alert-warning">⚠️ Este precio genera pérdida. Considera aumentarlo.</div>}
+                <div className="form-group">
+                  <label>Precio de venta</label>
+                  <input type="number" value={precioEdit} onChange={e=>setPrecioEdit(e.target.value)} placeholder={sim.precio.toString()}/>
+                </div>
+                <button className="btn btn-primary" onClick={confirmar} disabled={loading}>
+                  {loading ? <span className="spinner"/> : '✅ Confirmar venta'}
+                </button>
+                {resultado.candidatas.length > 1 && (
+                  <div style={{marginTop:'.5rem'}}>
+                    <div className="section-title" style={{marginBottom:'.4rem'}}>Otras SIMs disponibles</div>
+                    {resultado.candidatas.slice(1).map(s=>(
+                      <div key={s.id} style={{display:'flex',justifyContent:'space-between',fontSize:'.8rem',color:'#94a3b8',padding:'.3rem 0'}}>
+                        <span>{s.numero}</span>
+                        <span>{Number(s.saldo_disponible).toLocaleString()} cr.</span>
+                        <span style={{color:'#22c55e'}}>ganancia ${s.ganancia.toFixed(2)}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
+            )
+          })()}
+        </>
+      )}
+
+      {paso === 3 && resultado && !resultado.bloqueado && resultado.candidatas.length === 0 && (
+        <div className="alert alert-error">No hay SIMs con saldo o recargas suficientes para esta venta.</div>
+      )}
+    </div>
+  )
+}
+
+// ── HISTORIAL ─────────────────────────────────────────────
+function Historial({ ventas, sims, clientes, onRefresh }) {
+  const [filtro, setFiltro] = useState('todos')
+  const [loading, setLoading] = useState(null)
+
+  const simsMap = Object.fromEntries(sims.map(s=>[s.id,s]))
+  const clientesMap = Object.fromEntries(clientes.map(c=>[c.id,c]))
+
+  const filtradas = ventas
+    .filter(v => filtro === 'todos' || v.estado_pago === filtro)
+    .sort((a,b) => new Date(b.fecha) - new Date(a.fecha))
+
+  async function cobrar(v) {
+    setLoading(v.id)
+    const { error } = await sb.rpc('marcar_pago', { p_venta_id: v.id })
+    if (!error) onRefresh()
+    setLoading(null)
+  }
+
+  return (
+    <div className="page">
+      <div className="page-header">
+        <span className="page-title">Historial</span>
+      </div>
+      <div style={{display:'flex',gap:'.4rem'}}>
+        {['todos','pendiente','pagado'].map(f=>(
+          <button key={f} onClick={()=>setFiltro(f)}
+            style={{padding:'.4rem .9rem',borderRadius:'999px',border:'1.5px solid',fontSize:'.8rem',cursor:'pointer',fontWeight:600,
+              borderColor:filtro===f?'#38bdf8':'#334155',
+              background:filtro===f?'#0c2a4a':'transparent',
+              color:filtro===f?'#38bdf8':'#64748b'}}>
+            {f.charAt(0).toUpperCase()+f.slice(1)}
+          </button>
+        ))}
+      </div>
+
+      {filtradas.map(v => {
+        const cliente = clientesMap[v.cliente_id]
+        const sim = simsMap[v.sim_id]
+        return (
+          <div key={v.id} className="list-item" style={{flexDirection:'column',gap:'.5rem',alignItems:'stretch'}}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+              <div>
+                <div style={{fontWeight:700}}>{cliente?.nombre || '—'}</div>
+                <div style={{fontSize:'.75rem',color:'#64748b'}}>{new Date(v.fecha).toLocaleString('es',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})} · {sim?.numero||'—'}</div>
+              </div>
+              <div style={{textAlign:'right'}}>
+                <div style={{fontWeight:700,fontSize:'1rem'}}>{v.cantidad} cr.</div>
+                <div style={{fontSize:'.8rem',color:'#64748b'}}>${Number(v.precio_venta).toFixed(2)}</div>
+              </div>
+            </div>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+              <span className={`badge ${v.estado_pago==='pagado'?'badge-green':'badge-yellow'}`}>{v.estado_pago}</span>
+              <span style={{fontSize:'.8rem',color:'#22c55e',fontWeight:600}}>ganancia ${Number(v.ganancia).toFixed(2)}</span>
+              {v.estado_pago === 'pendiente' && (
+                <button className="btn btn-success btn-sm" onClick={()=>cobrar(v)} disabled={loading===v.id}>
+                  {loading===v.id ? <span className="spinner"/> : '✓ Cobrado'}
+                </button>
+              )}
+            </div>
+          </div>
+        )
+      })}
+      {filtradas.length === 0 && <div className="empty">Sin ventas{filtro!=='todos'?' en este filtro':''}</div>}
+    </div>
+  )
+}
+
+// ── APP PRINCIPAL ─────────────────────────────────────────
+function App() {
+  const [user, setUser] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [tab, setTab] = useState('dashboard')
+  const [sims, setSims] = useState([])
+  const [lotesPorSim, setLotesPorSim] = useState({})
+  const [clientes, setClientes] = useState([])
+  const [ventas, setVentas] = useState([])
+  const [config, setConfig] = useState(null)
+
+  useEffect(() => {
+    sb.auth.getSession().then(({ data }) => {
+      setUser(data.session?.user || null)
+      setLoading(false)
+    })
+    const { data: { subscription } } = sb.auth.onAuthStateChange((_, session) => {
+      setUser(session?.user || null)
+    })
+    return () => subscription.unsubscribe()
+  }, [])
+
+  const cargarDatos = useCallback(async () => {
+    if (!user) return
+    const [{ data: simsData }, { data: lotesData }, { data: clientesData }, { data: ventasData }, { data: configData }] = await Promise.all([
+      sb.from('sims').select('*').eq('activa', true).order('created_at'),
+      sb.from('lotes_saldo').select('*').order('fecha_compra'),
+      sb.from('clientes').select('*').order('nombre'),
+      sb.from('ventas').select('*').order('fecha', { ascending: false }),
+      sb.from('configuracion').select('*').single()
+    ])
+    setSims(simsData || [])
+    const por_sim = {}
+    ;(lotesData || []).forEach(l => {
+      if (!por_sim[l.sim_id]) por_sim[l.sim_id] = []
+      por_sim[l.sim_id].push(l)
+    })
+    setLotesPorSim(por_sim)
+    setClientes(clientesData || [])
+    setVentas(ventasData || [])
+    setConfig(configData)
+  }, [user])
+
+  useEffect(() => { cargarDatos() }, [cargarDatos])
+
+  async function logout() { await sb.auth.signOut(); setUser(null) }
+
+  if (loading) return (
+    <div style={{display:'flex',justifyContent:'center',alignItems:'center',height:'100vh'}}>
+      <span className="spinner" style={{width:32,height:32,borderWidth:3}}/>
+    </div>
+  )
+
+  if (!user) return <Auth onAuth={setUser}/>
+
+  const navItems = [
+    { id:'dashboard', label:'Inicio', icon:<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg> },
+    { id:'sims', label:'SIMs', icon:<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18.01"/></svg> },
+    { id:'ventas', label:'Vender', icon:<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg> },
+    { id:'clientes', label:'Clientes', icon:<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> },
+    { id:'historial', label:'Historial', icon:<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg> },
+  ]
+
+  return (
+    <div className="app">
+      <div style={{flex:1,overflowY:'auto'}}>
+        {tab==='dashboard' && <Dashboard sims={sims} ventas={ventas} lotesPorSim={lotesPorSim} clientes={clientes} config={config}/>}
+        {tab==='sims' && <Sims sims={sims} lotesPorSim={lotesPorSim} onRefresh={cargarDatos}/>}
+        {tab==='ventas' && <Ventas sims={sims} clientes={clientes} lotesPorSim={lotesPorSim} config={config} onRefresh={cargarDatos}/>}
+        {tab==='clientes' && <Clientes clientes={clientes} config={config} onRefresh={cargarDatos}/>}
+        {tab==='historial' && <Historial ventas={ventas} sims={sims} clientes={clientes} onRefresh={cargarDatos}/>}
+      </div>
+      <div style={{position:'sticky',bottom:0}}>
+        <div style={{display:'flex',justifyContent:'flex-end',padding:'.3rem .8rem',background:'#0f172a',borderTop:'1px solid #1e293b'}}>
+          <button onClick={logout} style={{background:'none',border:'none',color:'#64748b',fontSize:'.75rem',cursor:'pointer'}}>Cerrar sesión</button>
+        </div>
+        <nav className="nav">
+          {navItems.map(n=>(
+            <button key={n.id} className={`nav-item ${tab===n.id?'active':''}`} onClick={()=>setTab(n.id)}>
+              {n.icon}
+              {n.label}
+            </button>
+          ))}
+        </nav>
+      </div>
+    </div>
+  )
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>)
+</script>
+</body>
+</html>
