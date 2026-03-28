@@ -645,36 +645,35 @@ function App() {
     if (!user) return
     if (cargandoDatos.current) return
     cargandoDatos.current = true
-
-    Promise.all([
-      sb.from('sims').select('*').eq('activa', true).order('created_at'),
-      sb.from('lotes_saldo').select('*').order('fecha_compra'),
-      sb.from('clientes').select('*').order('nombre'),
-      sb.from('ventas').select('*').order('fecha', { ascending: false }),
-      sb.from('configuracion').select('*').maybeSingle()
-    ]).then(([{data:s},{data:l},{data:c},{data:v},{data:cfg}]) => {
-      setSims(s||[])
-      const por_sim = {}
-      ;(l||[]).forEach(x => { if(!por_sim[x.sim_id]) por_sim[x.sim_id]=[]; por_sim[x.sim_id].push(x) })
-      setLotesPorSim(por_sim)
-      setClientes(c||[])
-      setVentas(v||[])
-      setConfig(cfg)
-      cargandoDatos.current = false
-    })
+    ;(async () => {
+      try {
+        const { data:s } = await sb.from('sims').select('*').eq('activa', true).order('created_at')
+        const { data:l } = await sb.from('lotes_saldo').select('*').order('fecha_compra')
+        const { data:c } = await sb.from('clientes').select('*').order('nombre')
+        const { data:v } = await sb.from('ventas').select('*').order('fecha', { ascending: false })
+        const { data:cfg } = await sb.from('configuracion').select('*').maybeSingle()
+        setSims(s||[])
+        const por_sim = {}
+        ;(l||[]).forEach(x => { if(!por_sim[x.sim_id]) por_sim[x.sim_id]=[]; por_sim[x.sim_id].push(x) })
+        setLotesPorSim(por_sim)
+        setClientes(c||[])
+        setVentas(v||[])
+        setConfig(cfg)
+      } finally {
+        cargandoDatos.current = false
+      }
+    })()
   }, [user])
 
-  // Refresh manual: llamado explícitamente tras mutaciones
-  function refrescar() {
+  async function refrescar() {
     if (!user || cargandoDatos.current) return
     cargandoDatos.current = true
-    Promise.all([
-      sb.from('sims').select('*').eq('activa', true).order('created_at'),
-      sb.from('lotes_saldo').select('*').order('fecha_compra'),
-      sb.from('clientes').select('*').order('nombre'),
-      sb.from('ventas').select('*').order('fecha', { ascending: false }),
-      sb.from('configuracion').select('*').maybeSingle()
-    ]).then(([{data:s},{data:l},{data:c},{data:v},{data:cfg}]) => {
+    try {
+      const { data:s } = await sb.from('sims').select('*').eq('activa', true).order('created_at')
+      const { data:l } = await sb.from('lotes_saldo').select('*').order('fecha_compra')
+      const { data:c } = await sb.from('clientes').select('*').order('nombre')
+      const { data:v } = await sb.from('ventas').select('*').order('fecha', { ascending: false })
+      const { data:cfg } = await sb.from('configuracion').select('*').maybeSingle()
       setSims(s||[])
       const por_sim = {}
       ;(l||[]).forEach(x => { if(!por_sim[x.sim_id]) por_sim[x.sim_id]=[]; por_sim[x.sim_id].push(x) })
@@ -682,8 +681,9 @@ function App() {
       setClientes(c||[])
       setVentas(v||[])
       setConfig(cfg)
+    } finally {
       cargandoDatos.current = false
-    })
+    }
   }
 
   async function logout() {
