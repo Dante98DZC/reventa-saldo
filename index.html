@@ -772,14 +772,14 @@ function App() {
     return () => subscription.unsubscribe()
   }, [])
 
-  const cargarDatos = useCallback(async () => {
-    if (!user) return
+  const cargarDatos = useCallback(async (uid) => {
+    if (!uid) return
     const [{ data: simsData }, { data: lotesData }, { data: clientesData }, { data: ventasData }, { data: configData }] = await Promise.all([
       sb.from('sims').select('*').eq('activa', true).order('created_at'),
       sb.from('lotes_saldo').select('*').order('fecha_compra'),
       sb.from('clientes').select('*').order('nombre'),
       sb.from('ventas').select('*').order('fecha', { ascending: false }),
-      sb.from('configuracion').select('*').single()
+      sb.from('configuracion').select('*').maybeSingle()
     ])
     setSims(simsData || [])
     const por_sim = {}
@@ -791,9 +791,9 @@ function App() {
     setClientes(clientesData || [])
     setVentas(ventasData || [])
     setConfig(configData)
-  }, [user])
+  }, [])
 
-  useEffect(() => { cargarDatos() }, [cargarDatos])
+  useEffect(() => { if (user) cargarDatos(user.id) }, [user])
 
   async function logout() { await sb.auth.signOut(); setUser(null) }
 
@@ -817,10 +817,10 @@ function App() {
     <div className="app">
       <div style={{flex:1,overflowY:'auto'}}>
         {tab==='dashboard' && <Dashboard sims={sims} ventas={ventas} lotesPorSim={lotesPorSim} clientes={clientes} config={config}/>}
-        {tab==='sims' && <Sims sims={sims} lotesPorSim={lotesPorSim} onRefresh={cargarDatos}/>}
-        {tab==='ventas' && <Ventas sims={sims} clientes={clientes} lotesPorSim={lotesPorSim} config={config} onRefresh={cargarDatos}/>}
-        {tab==='clientes' && <Clientes clientes={clientes} config={config} onRefresh={cargarDatos}/>}
-        {tab==='historial' && <Historial ventas={ventas} sims={sims} clientes={clientes} onRefresh={cargarDatos}/>}
+        {tab==='sims' && <Sims sims={sims} lotesPorSim={lotesPorSim} onRefresh={()=>cargarDatos(user.id)}/>}
+        {tab==='ventas' && <Ventas sims={sims} clientes={clientes} lotesPorSim={lotesPorSim} config={config} onRefresh={()=>cargarDatos(user.id)}/>}
+        {tab==='clientes' && <Clientes clientes={clientes} config={config} onRefresh={()=>cargarDatos(user.id)}/>}
+        {tab==='historial' && <Historial ventas={ventas} sims={sims} clientes={clientes} onRefresh={()=>cargarDatos(user.id)}/>}
       </div>
       <div style={{position:'sticky',bottom:0}}>
         <div style={{display:'flex',justifyContent:'flex-end',padding:'.3rem .8rem',background:'#0f172a',borderTop:'1px solid #1e293b'}}>
