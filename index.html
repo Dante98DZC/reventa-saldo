@@ -48,7 +48,7 @@
   .metric-value.yellow{color:#fbbf24}
   .metric-value.red{color:#ef4444}
   .page{padding:1rem;display:flex;flex-direction:column;gap:1rem;padding-bottom:1.5rem;overflow-y:auto;-webkit-overflow-scrolling:touch;flex:1}
-  .page-header{display:flex;align-items:center;justify-content:space-between;padding:.5rem 0;position:sticky;top:0;background:#1e293b;z-index:10;margin:-0.1rem -0.1rem 0;padding-left:.1rem;padding-right:.1rem}
+  .page-header{display:flex;align-items:center;justify-content:space-between;padding:.5rem 0;position:sticky;top:0;background:#1e293b;z-index:10}
   .page-title{font-size:1.1rem;font-weight:700}
   .list-item{background:#0f172a;border-radius:10px;padding:1rem;border:1px solid #1e293b;display:flex;align-items:center;gap:.8rem}
   .list-item-info{flex:1}
@@ -67,17 +67,21 @@
   .alert-success{background:#064e3b;border-color:#22c55e;color:#86efac}
   .alert-warning{background:#451a03;border-color:#f59e0b;color:#fcd34d}
   .sim-card{background:#0f172a;border-radius:12px;padding:1.2rem;border:1px solid #1e293b}
-  .sim-number{font-size:1rem;font-weight:700;color:#38bdf8;margin-bottom:.5rem}
+  .sim-card.selected{border-color:#38bdf8;background:#0c1f35}
+  .sim-name{font-size:1rem;font-weight:700;color:#38bdf8;margin-bottom:.2rem}
+  .sim-number{font-size:.78rem;color:#64748b;margin-bottom:.5rem}
   .sim-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.5rem;margin-top:.8rem}
   .sim-stat{text-align:center}
   .sim-stat-val{font-size:1rem;font-weight:700}
   .sim-stat-label{font-size:.65rem;color:#64748b;margin-top:.1rem}
-  .recargas-bar{display:flex;gap:.2rem;margin-top:.8rem}
-  .recarga-dot{height:6px;flex:1;border-radius:3px;background:#1e293b}
+  .recargas-bar{display:flex;gap:.3rem;margin-top:.8rem}
+  .recarga-dot{height:8px;flex:1;border-radius:4px;background:#1e293b}
   .recarga-dot.used{background:#38bdf8}
-  .tipo-btn{flex:1;padding:1rem;border-radius:10px;border:2px solid #334155;background:#0f172a;color:#e2e8f0;font-size:1rem;font-weight:700;cursor:pointer;transition:.2s;text-align:center}
+  .tipo-btn{flex:1;padding:1rem;border-radius:10px;border:2px solid #334155;background:#0f172a;color:#e2e8f0;font-size:1rem;font-weight:700;cursor:pointer;transition:.2s;text-align:center;touch-action:manipulation}
   .tipo-btn.selected{border-color:#38bdf8;background:#0c2a4a;color:#38bdf8}
-  .tipo-btn:hover{border-color:#475569}
+  .sim-select-card{border-radius:10px;padding:.9rem 1rem;border:2px solid #334155;background:#0f172a;cursor:pointer;transition:.2s;touch-action:manipulation;display:flex;align-items:center;gap:.8rem}
+  .sim-select-card.selected{border-color:#38bdf8;background:#0c1f35}
+  .sim-select-card.recomendada{position:relative}
   .resumen-box{background:#0f172a;border-radius:10px;padding:1rem;border:1px solid #1e293b;display:flex;flex-direction:column;gap:.6rem}
   .resumen-row{display:flex;justify-content:space-between;font-size:.9rem}
   .resumen-row.highlight{font-weight:700;font-size:1rem;color:#22c55e;border-top:1px solid #1e293b;padding-top:.6rem;margin-top:.2rem}
@@ -85,24 +89,19 @@
   .section-title{font-size:.75rem;color:#64748b;text-transform:uppercase;letter-spacing:.05em;font-weight:700}
   .empty{text-align:center;color:#475569;padding:2rem;font-size:.9rem}
   .spinner{display:inline-block;width:18px;height:18px;border:2px solid #334155;border-top-color:#38bdf8;border-radius:50%;animation:spin .7s linear infinite}
+  .fab{position:fixed;bottom:calc(80px + env(safe-area-inset-bottom));right:1.2rem;width:58px;height:58px;border-radius:50%;background:#38bdf8;color:#0f172a;border:none;font-size:1.6rem;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(56,189,248,.4);touch-action:manipulation;z-index:50}
+  .link-btn{background:none;border:none;color:#38bdf8;font-size:.85rem;cursor:pointer;padding:.2rem 0;text-decoration:underline;touch-action:manipulation}
   @keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
 <div id="root"></div>
 
-<!-- Supabase se instancia una sola vez, fuera de React -->
 <script>
 window._sb = supabase.createClient(
   'https://lgtenvitmceyzcdctefd.supabase.co',
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxndGVudml0bWNleXpjZGN0ZWZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2NDM4MDksImV4cCI6MjA5MDIxOTgwOX0.5jZPJndP7yNP7BKPmUWidc7SoscqIkafw8l4B88VCiQ',
-  {
-    auth: {
-      persistSession: true,
-      autoRefreshToken: true,
-      detectSessionInUrl: false
-    }
-  }
+  { auth: { persistSession:true, autoRefreshToken:true, detectSessionInUrl:false } }
 )
 </script>
 
@@ -112,7 +111,7 @@ const { useState, useEffect, useRef } = React
 
 // ── MOTORES ────────────────────────────────────────────────
 function calcularRiesgo(cliente, config) {
-  if (!cliente.fecha_ultima_compra) return { score: 0, nivel: 'bajo' }
+  if (!cliente?.fecha_ultima_compra) return { score:0, nivel:'bajo' }
   const limite = config?.limite_deuda_cliente || 500
   const dias_inactivo = (Date.now() - new Date(cliente.fecha_ultima_compra)) / 86400000
   const s1 = Math.min((cliente.deuda_total / limite) * 100, 100) * 0.5
@@ -134,19 +133,8 @@ function precioSugerido(costo_real, tipo, config) {
   return +(costo_real * (1 + m[tipo] / 100)).toFixed(2)
 }
 
-function seleccionOptima(sims, lotesPorSim, cliente, tipo, config) {
-  const costo_op = config?.costo_operativo || 5
-  const candidatas = sims
-    .filter(s => s.activa && s.recargas_restantes > 0 && s.saldo_disponible >= tipo + costo_op)
-    .map(s => {
-      const cpp = cppSim(lotesPorSim[s.id] || [])
-      const costo_real = +(cpp * tipo).toFixed(4)
-      const precio = precioSugerido(costo_real, tipo, config)
-      const ganancia = +(precio - costo_real - costo_op).toFixed(2)
-      return { ...s, cpp, costo_real, precio, ganancia }
-    })
-    .sort((a,b) => b.ganancia - a.ganancia)
-  return candidatas
+function simLabel(sim) {
+  return sim.nombre || sim.numero
 }
 
 // ── COMPONENTES BASE ──────────────────────────────────────
@@ -159,6 +147,43 @@ function Modal({ title, onClose, children }) {
           <button onClick={onClose} style={{background:'none',border:'none',color:'#64748b',fontSize:'1.2rem',cursor:'pointer'}}>✕</button>
         </div>
         {children}
+      </div>
+    </div>
+  )
+}
+
+// ── FORM NUEVO CLIENTE (reutilizable) ─────────────────────
+function FormNuevoCliente({ userId, onCreado, onCancelar }) {
+  const [nombre, setNombre] = useState('')
+  const [tel, setTel] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [err, setErr] = useState('')
+
+  async function crear() {
+    if (!nombre.trim()) return setErr('Ingresa el nombre')
+    setLoading(true); setErr('')
+    const { data, error } = await sb.from('clientes')
+      .insert({ nombre: nombre.trim(), telefono: tel||null, user_id: userId })
+      .select().single()
+    if (error) { setErr(error.message); setLoading(false); return }
+    onCreado(data)
+    setLoading(false)
+  }
+
+  return (
+    <div style={{display:'flex',flexDirection:'column',gap:'.8rem'}}>
+      {err && <div className="alert alert-error">{err}</div>}
+      <div className="form-group">
+        <label>Nombre</label>
+        <input value={nombre} onChange={e=>setNombre(e.target.value)} placeholder="Nombre del cliente" autoFocus/>
+      </div>
+      <div className="form-group">
+        <label>Teléfono (opcional)</label>
+        <input value={tel} onChange={e=>setTel(e.target.value)} placeholder="+52 555 000 0000"/>
+      </div>
+      <div style={{display:'flex',gap:'.6rem'}}>
+        <button className="btn btn-secondary" onClick={onCancelar}>Cancelar</button>
+        <button className="btn btn-primary" onClick={crear} disabled={loading}>{loading?<span className="spinner"/>:'Guardar'}</button>
       </div>
     </div>
   )
@@ -199,24 +224,15 @@ function Auth({ onAuth }) {
       </div>
       {err && <div className="alert alert-error">{err}</div>}
       {ok && <div className="alert alert-success">{ok}</div>}
-      <div className="form-group">
-        <label>Correo</label>
-        <input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="correo@ejemplo.com"/>
-      </div>
-      <div className="form-group">
-        <label>Contraseña</label>
-        <input type="password" value={pass} onChange={e=>setPass(e.target.value)} placeholder="••••••••"
-          onKeyDown={e=>e.key==='Enter'&&submit()}/>
-      </div>
-      <button className="btn btn-primary" onClick={submit} disabled={loading}>
-        {loading ? <span className="spinner"/> : tab==='login' ? 'Entrar' : 'Crear cuenta'}
-      </button>
+      <div className="form-group"><label>Correo</label><input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="correo@ejemplo.com"/></div>
+      <div className="form-group"><label>Contraseña</label><input type="password" value={pass} onChange={e=>setPass(e.target.value)} placeholder="••••••••" onKeyDown={e=>e.key==='Enter'&&submit()}/></div>
+      <button className="btn btn-primary" onClick={submit} disabled={loading}>{loading?<span className="spinner"/>:tab==='login'?'Entrar':'Crear cuenta'}</button>
     </div>
   )
 }
 
 // ── DASHBOARD ─────────────────────────────────────────────
-function Dashboard({ sims, ventas, lotesPorSim, clientes, config }) {
+function Dashboard({ sims, ventas, lotesPorSim, clientes, config, onVender }) {
   const saldo_total = sims.reduce((s,sim) => s + Number(sim.saldo_disponible), 0)
   const ganancia_total = ventas.filter(v=>v.estado_pago==='pagado').reduce((s,v)=>s+Number(v.ganancia),0)
   const hoy = new Date().toDateString()
@@ -224,6 +240,9 @@ function Dashboard({ sims, ventas, lotesPorSim, clientes, config }) {
   const pendiente = ventas.filter(v=>v.estado_pago==='pendiente').reduce((s,v)=>s+Number(v.precio_venta),0)
   const recargas_hoy = sims.reduce((s,sim)=>s+sim.recargas_restantes,0)
   const en_riesgo = clientes.filter(c=>calcularRiesgo(c,config).nivel==='alto').length
+  const recientes = [...ventas].sort((a,b)=>new Date(b.fecha)-new Date(a.fecha)).slice(0,5)
+  const clientesMap = Object.fromEntries(clientes.map(c=>[c.id,c]))
+  const simsMap = Object.fromEntries(sims.map(s=>[s.id,s]))
 
   return (
     <div className="page">
@@ -239,12 +258,34 @@ function Dashboard({ sims, ventas, lotesPorSim, clientes, config }) {
         <div className="metric"><div className="metric-label">Recargas hoy</div><div className="metric-value blue">{recargas_hoy}</div><div style={{fontSize:'.72rem',color:'#64748b',marginTop:'.2rem'}}>disponibles</div></div>
         <div className="metric"><div className="metric-label">Clientes riesgo</div><div className={`metric-value ${en_riesgo>0?'red':'green'}`}>{en_riesgo}</div></div>
       </div>
+
+      {recientes.length > 0 && <>
+        <div className="section-title">Ventas recientes</div>
+        {recientes.map(v => {
+          const cliente = v.cliente_id ? clientesMap[v.cliente_id] : null
+          const sim = simsMap[v.sim_id]
+          return (
+            <div key={v.id} style={{background:'#0f172a',borderRadius:10,padding:'.8rem 1rem',border:'1px solid #1e293b',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+              <div>
+                <div style={{fontWeight:600,fontSize:'.9rem'}}>{cliente?.nombre || '👤 Sin cliente'}</div>
+                <div style={{fontSize:'.72rem',color:'#64748b',marginTop:'.15rem'}}>{simLabel(sim)||'—'} · {new Date(v.fecha).toLocaleTimeString('es',{hour:'2-digit',minute:'2-digit'})}</div>
+              </div>
+              <div style={{textAlign:'right'}}>
+                <div style={{fontWeight:700}}>{v.cantidad} cr.</div>
+                <div style={{fontSize:'.78rem',color: v.estado_pago==='pagado'?'#22c55e':'#fbbf24'}}>{v.estado_pago==='pagado'?`+$${Number(v.ganancia).toFixed(2)}`:`$${Number(v.precio_venta).toFixed(2)} pend.`}</div>
+              </div>
+            </div>
+          )
+        })}
+      </>}
+
       <div className="section-title">SIMs activas</div>
       {sims.filter(s=>s.activa).map(sim => {
         const dots = Array.from({length:sim.limite_diario},(_,i)=>i<sim.recargas_restantes)
         return (
           <div key={sim.id} className="sim-card">
-            <div className="sim-number">📱 {sim.numero}</div>
+            <div className="sim-name">📱 {simLabel(sim)}</div>
+            {sim.nombre && <div className="sim-number">{sim.numero}</div>}
             <div className="sim-stats">
               <div className="sim-stat"><div className="sim-stat-val blue">{Number(sim.saldo_disponible).toLocaleString()}</div><div className="sim-stat-label">créditos</div></div>
               <div className="sim-stat"><div className="sim-stat-val">{sim.recargas_restantes}/{sim.limite_diario}</div><div className="sim-stat-label">recargas hoy</div></div>
@@ -254,7 +295,9 @@ function Dashboard({ sims, ventas, lotesPorSim, clientes, config }) {
           </div>
         )
       })}
-      {sims.filter(s=>s.activa).length===0 && <div className="empty">Sin SIMs registradas</div>}
+      {sims.filter(s=>s.activa).length===0&&<div className="empty">Sin SIMs registradas</div>}
+
+      <button className="fab" onClick={onVender}>⚡</button>
     </div>
   )
 }
@@ -263,6 +306,7 @@ function Dashboard({ sims, ventas, lotesPorSim, clientes, config }) {
 function Sims({ sims, lotesPorSim, userId, onRefresh }) {
   const [modalSim, setModalSim] = useState(false)
   const [modalLote, setModalLote] = useState(null)
+  const [nombre, setNombre] = useState('')
   const [numero, setNumero] = useState('')
   const [cantidad, setCantidad] = useState('')
   const [costo, setCosto] = useState('')
@@ -272,9 +316,15 @@ function Sims({ sims, lotesPorSim, userId, onRefresh }) {
   async function crearSim() {
     if (!numero.trim()) return setErr('Ingresa el número')
     setLoading(true); setErr('')
-    const { error } = await sb.from('sims').insert({ numero: numero.trim(), user_id: userId })
+    const { error } = await sb.from('sims').insert({
+      numero: numero.trim(),
+      nombre: nombre.trim() || null,
+      user_id: userId,
+      limite_diario: 3,
+      recargas_restantes: 3
+    })
     if (error) { setErr(error.message); setLoading(false); return }
-    setModalSim(false); setNumero(''); onRefresh()
+    setModalSim(false); setNombre(''); setNumero(''); onRefresh()
     setLoading(false)
   }
 
@@ -304,7 +354,10 @@ function Sims({ sims, lotesPorSim, userId, onRefresh }) {
         return (
           <div key={sim.id} className="sim-card">
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start'}}>
-              <div className="sim-number">📱 {sim.numero}</div>
+              <div>
+                <div className="sim-name">📱 {simLabel(sim)}</div>
+                {sim.nombre && <div className="sim-number">{sim.numero}</div>}
+              </div>
               <button className="btn btn-secondary btn-sm" onClick={()=>{setModalLote(sim);setErr('')}}>+ Cargar saldo</button>
             </div>
             <div className="sim-stats">
@@ -313,7 +366,7 @@ function Sims({ sims, lotesPorSim, userId, onRefresh }) {
               <div className="sim-stat"><div className="sim-stat-val">{cpp>0?`$${cpp.toFixed(4)}`:'—'}</div><div className="sim-stat-label">costo/créd.</div></div>
             </div>
             <div className="recargas-bar">{dots.map((u,i)=><div key={i} className={`recarga-dot ${u?'used':''}`}/>)}</div>
-            {lotes.length>0 && (
+            {lotes.length>0&&(
               <div style={{marginTop:'.8rem'}}>
                 <div className="section-title" style={{marginBottom:'.4rem'}}>Lotes cargados</div>
                 {lotes.map(l=>(
@@ -329,18 +382,19 @@ function Sims({ sims, lotesPorSim, userId, onRefresh }) {
           </div>
         )
       })}
-      {sims.length===0 && <div className="empty">No tienes SIMs registradas.<br/>Agrega tu primera SIM.</div>}
+      {sims.length===0&&<div className="empty">No tienes SIMs registradas.<br/>Agrega tu primera SIM.</div>}
 
-      {modalSim && (
+      {modalSim&&(
         <Modal title="Nueva SIM" onClose={()=>setModalSim(false)}>
-          {err && <div className="alert alert-error">{err}</div>}
+          {err&&<div className="alert alert-error">{err}</div>}
+          <div className="form-group"><label>Nombre (opcional)</label><input value={nombre} onChange={e=>setNombre(e.target.value)} placeholder="Ej: SIM Telcel, SIM principal"/></div>
           <div className="form-group"><label>Número</label><input value={numero} onChange={e=>setNumero(e.target.value)} placeholder="+52 555 000 0000"/></div>
           <button className="btn btn-primary" onClick={crearSim} disabled={loading}>{loading?<span className="spinner"/>:'Guardar SIM'}</button>
         </Modal>
       )}
-      {modalLote && (
-        <Modal title={`Cargar saldo — ${modalLote.numero}`} onClose={()=>setModalLote(null)}>
-          {err && <div className="alert alert-error">{err}</div>}
+      {modalLote&&(
+        <Modal title={`Cargar saldo — ${simLabel(modalLote)}`} onClose={()=>setModalLote(null)}>
+          {err&&<div className="alert alert-error">{err}</div>}
           <div className="form-group"><label>Créditos comprados</label><input type="number" value={cantidad} onChange={e=>setCantidad(e.target.value)} placeholder="Ej: 1000"/></div>
           <div className="form-group"><label>Dinero pagado ($)</label><input type="number" value={costo} onChange={e=>setCosto(e.target.value)} placeholder="Ej: 85.00"/></div>
           {cantidad&&costo&&Number(cantidad)>0&&<div className="alert alert-success">Costo unitario: ${(Number(costo)/Number(cantidad)).toFixed(4)} por crédito</div>}
@@ -354,20 +408,7 @@ function Sims({ sims, lotesPorSim, userId, onRefresh }) {
 // ── CLIENTES ──────────────────────────────────────────────
 function Clientes({ clientes, config, userId, onRefresh }) {
   const [modal, setModal] = useState(false)
-  const [nombre, setNombre] = useState('')
-  const [tel, setTel] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [err, setErr] = useState('')
   const [buscar, setBuscar] = useState('')
-
-  async function crear() {
-    if (!nombre.trim()) return setErr('Ingresa el nombre')
-    setLoading(true); setErr('')
-    const { error } = await sb.from('clientes').insert({ nombre: nombre.trim(), telefono: tel||null, user_id: userId })
-    if (error) { setErr(error.message); setLoading(false); return }
-    setModal(false); setNombre(''); setTel(''); onRefresh()
-    setLoading(false)
-  }
 
   const filtrados = clientes.filter(c =>
     c.nombre.toLowerCase().includes(buscar.toLowerCase()) ||
@@ -379,7 +420,7 @@ function Clientes({ clientes, config, userId, onRefresh }) {
     <div className="page">
       <div className="page-header">
         <span className="page-title">Clientes</span>
-        <button className="btn btn-primary btn-sm" onClick={()=>{setModal(true);setErr('')}}>+ Cliente</button>
+        <button className="btn btn-primary btn-sm" onClick={()=>setModal(true)}>+ Cliente</button>
       </div>
       <input value={buscar} onChange={e=>setBuscar(e.target.value)} placeholder="🔍 Buscar..."/>
       {filtrados.map(c => {
@@ -399,12 +440,13 @@ function Clientes({ clientes, config, userId, onRefresh }) {
         )
       })}
       {filtrados.length===0&&<div className="empty">Sin clientes{buscar?' encontrados':' registrados'}</div>}
-      {modal && (
+      {modal&&(
         <Modal title="Nuevo cliente" onClose={()=>setModal(false)}>
-          {err&&<div className="alert alert-error">{err}</div>}
-          <div className="form-group"><label>Nombre</label><input value={nombre} onChange={e=>setNombre(e.target.value)} placeholder="Nombre del cliente"/></div>
-          <div className="form-group"><label>Teléfono (opcional)</label><input value={tel} onChange={e=>setTel(e.target.value)} placeholder="+52 555 000 0000"/></div>
-          <button className="btn btn-primary" onClick={crear} disabled={loading}>{loading?<span className="spinner"/>:'Guardar'}</button>
+          <FormNuevoCliente
+            userId={userId}
+            onCreado={()=>{ setModal(false); onRefresh() }}
+            onCancelar={()=>setModal(false)}
+          />
         </Modal>
       )}
     </div>
@@ -412,43 +454,71 @@ function Clientes({ clientes, config, userId, onRefresh }) {
 }
 
 // ── VENTAS ────────────────────────────────────────────────
-function Ventas({ sims, clientes, lotesPorSim, config, onRefresh }) {
-  const [paso, setPaso] = useState(1)
-  const [clienteSel, setClienteSel] = useState(null)
+function Ventas({ sims, clientes: clientesIniciales, lotesPorSim, config, userId, onRefresh }) {
+  const [paso, setPaso] = useState(1) // 1=tipo 2=sim 3=cliente 4=resumen
   const [tipo, setTipo] = useState(null)
-  const [candidatas, setCandidatas] = useState([])
-  const [precioEdit, setPrecioEdit] = useState('')
+  const [simSel, setSimSel] = useState(null)
+  const [clienteSel, setClienteSel] = useState(null) // null = sin cliente
+  const [clientes, setClientes] = useState(clientesIniciales)
   const [buscar, setBuscar] = useState('')
+  const [creandoCliente, setCreandoCliente] = useState(false)
+  const [precioEdit, setPrecioEdit] = useState('')
   const [loading, setLoading] = useState(false)
   const [err, setErr] = useState('')
   const [ok, setOk] = useState('')
 
-  function reset() { setPaso(1);setClienteSel(null);setTipo(null);setCandidatas([]);setPrecioEdit('');setErr('');setOk('') }
+  // Sincronizar clientes si cambian externamente
+  useEffect(() => { setClientes(clientesIniciales) }, [clientesIniciales])
 
-  function selCliente(c) { setClienteSel(c); setBuscar(''); setPaso(2) }
+  const costo_op = config?.costo_operativo || 5
+
+  // SIMs candidatas para el tipo seleccionado
+  const simsDisponibles = sims.filter(s =>
+    s.activa && s.recargas_restantes > 0 && s.saldo_disponible >= (tipo||0) + costo_op
+  ).map(s => {
+    const cpp = cppSim(lotesPorSim[s.id] || [])
+    const costo_real = +(cpp * (tipo||0)).toFixed(4)
+    const precio = precioSugerido(costo_real, tipo||120, config)
+    const ganancia = +(precio - costo_real - costo_op).toFixed(2)
+    return { ...s, cpp, costo_real, precio, ganancia }
+  }).sort((a,b) => b.ganancia - a.ganancia)
+
+  function reset() {
+    setPaso(1); setTipo(null); setSimSel(null); setClienteSel(null)
+    setBuscar(''); setCreandoCliente(false); setPrecioEdit(''); setErr(''); setOk('')
+  }
 
   function selTipo(t) {
-    setTipo(t)
-    const res = seleccionOptima(sims, lotesPorSim, clienteSel, t, config)
-    setCandidatas(res)
-    if (res.length > 0) setPrecioEdit(res[0].precio.toString())
+    setTipo(t); setSimSel(null); setPrecioEdit(''); setPaso(2)
+  }
+
+  function selSim(sim) {
+    setSimSel(sim)
+    setPrecioEdit(sim.precio.toString())
     setPaso(3)
   }
 
+  function saltarCliente() {
+    setClienteSel(null); setPaso(4)
+  }
+
+  function selCliente(c) {
+    setClienteSel(c); setBuscar(''); setPaso(4)
+  }
+
   async function confirmar() {
-    if (!candidatas.length) return
+    if (!simSel) return
     setLoading(true); setErr('')
-    const sim = candidatas[0]
-    const precio = parseFloat(precioEdit) || sim.precio
+    const precio = parseFloat(precioEdit) || simSel.precio
     const { error } = await sb.rpc('registrar_venta', {
-      p_cliente_id: clienteSel.id,
-      p_sim_id: sim.id,
+      p_cliente_id: clienteSel?.id || null,
+      p_sim_id: simSel.id,
       p_cantidad: tipo,
       p_precio_venta: precio,
-      p_costo_real: sim.costo_real
+      p_costo_real: simSel.costo_real
     })
     if (error) { setErr(error.message); setLoading(false); return }
-    const ganancia = precio - sim.costo_real - (config?.costo_operativo||5)
+    const ganancia = precio - simSel.costo_real - costo_op
     setOk(`✅ Venta registrada. Ganancia: $${ganancia.toFixed(2)}`)
     onRefresh()
     setTimeout(reset, 2500)
@@ -467,95 +537,127 @@ function Ventas({ sims, clientes, lotesPorSim, config, onRefresh }) {
     </div>
   )
 
+  const titulos = { 1:'¿Cuánto saldo?', 2:'¿Desde qué SIM?', 3:'¿Para quién?', 4:'Confirmar venta' }
+
   return (
     <div className="page">
       <div className="page-header">
-        <span className="page-title">{paso===1?'¿A quién le vendes?':paso===2?'¿Cuánto saldo?':'Confirmar venta'}</span>
+        <span className="page-title">{titulos[paso]}</span>
         {paso>1&&<button className="btn btn-secondary btn-sm" onClick={()=>setPaso(p=>p-1)}>← Atrás</button>}
       </div>
       {err&&<div className="alert alert-error">{err}</div>}
 
+      {/* PASO 1 — Tipo de recarga */}
       {paso===1&&(
-        <>
-          <input value={buscar} onChange={e=>setBuscar(e.target.value)} placeholder="🔍 Buscar cliente..."/>
-          {filtrados.map(c => {
-            const { nivel } = calcularRiesgo(c, config)
+        <div style={{display:'flex',gap:'.8rem',marginTop:'.5rem'}}>
+          {[120,240,360].map(t => {
+            const disponible = sims.some(s=>s.activa&&s.recargas_restantes>0&&s.saldo_disponible>=t+costo_op)
             return (
-              <div key={c.id} className="list-item" style={{cursor:'pointer'}} onClick={()=>selCliente(c)}>
-                <div style={{width:40,height:40,borderRadius:'50%',background:'#1e293b',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'1.1rem',flexShrink:0}}>{c.nombre.charAt(0).toUpperCase()}</div>
-                <div className="list-item-info">
-                  <div className="list-item-title">{c.nombre}</div>
-                  <div className="list-item-sub">Deuda: ${Number(c.deuda_total).toFixed(2)}</div>
-                </div>
-                <span className={`badge ${nivelColor[nivel]}`}>{nivel}</span>
-              </div>
+              <button key={t} className={`tipo-btn ${tipo===t?'selected':''}`}
+                style={!disponible?{opacity:.4,cursor:'not-allowed'}:{}}
+                onClick={()=>disponible&&selTipo(t)}>
+                <div style={{fontSize:'1.4rem',fontWeight:800}}>{t}</div>
+                <div style={{fontSize:'.7rem',color:'#64748b',marginTop:'.3rem'}}>créditos</div>
+                {!disponible&&<div style={{fontSize:'.65rem',color:'#ef4444',marginTop:'.3rem'}}>Sin saldo</div>}
+              </button>
             )
           })}
-          {clientes.length===0&&<div className="empty">Primero registra un cliente</div>}
-        </>
+        </div>
       )}
 
+      {/* PASO 2 — Selección de SIM */}
       {paso===2&&(
         <>
-          <div className="card">
-            <div style={{fontSize:'.85rem',color:'#94a3b8',marginBottom:'.3rem'}}>Cliente</div>
-            <div style={{fontWeight:700}}>{clienteSel?.nombre}</div>
-            {clienteSel?.deuda_total>0&&<div style={{color:'#fbbf24',fontSize:'.85rem',marginTop:'.2rem'}}>Deuda: ${Number(clienteSel.deuda_total).toFixed(2)}</div>}
-          </div>
-          <div className="section-title">Tipo de recarga</div>
-          <div style={{display:'flex',gap:'.8rem'}}>
-            {[120,240,360].map(t => {
-              const ok = sims.some(s=>s.activa&&s.recargas_restantes>0&&s.saldo_disponible>=t+(config?.costo_operativo||5))
-              return (
-                <button key={t} className={`tipo-btn ${tipo===t?'selected':''}`}
-                  style={!ok?{opacity:.4,cursor:'not-allowed'}:{}}
-                  onClick={()=>ok&&selTipo(t)}>
-                  <div style={{fontSize:'1.3rem',fontWeight:800}}>{t}</div>
-                  <div style={{fontSize:'.7rem',color:'#64748b',marginTop:'.2rem'}}>créditos</div>
-                  {!ok&&<div style={{fontSize:'.65rem',color:'#ef4444',marginTop:'.2rem'}}>Sin saldo</div>}
-                </button>
-              )
-            })}
-          </div>
-        </>
-      )}
-
-      {paso===3&&(
-        <>
-          {candidatas.length===0
+          {simsDisponibles.length===0
             ? <div className="alert alert-error">No hay SIMs con saldo o recargas suficientes.</div>
-            : (()=>{
-                const sim = candidatas[0]
-                const precio = parseFloat(precioEdit)||sim.precio
-                const ganancia = precio - sim.costo_real - (config?.costo_operativo||5)
+            : simsDisponibles.map((sim, idx) => {
+                const dots = Array.from({length:sim.limite_diario},(_,i)=>i<sim.recargas_restantes)
                 return (
-                  <>
-                    <div className="resumen-box">
-                      <div className="resumen-row"><span style={{color:'#64748b'}}>Cliente</span><span style={{fontWeight:600}}>{clienteSel?.nombre}</span></div>
-                      <div className="resumen-row"><span style={{color:'#64748b'}}>Recarga</span><span style={{fontWeight:600}}>{tipo} créditos</span></div>
-                      <div className="resumen-row"><span style={{color:'#64748b'}}>SIM</span><span style={{fontWeight:600,color:'#38bdf8'}}>{sim.numero}</span></div>
-                      <div className="resumen-row"><span style={{color:'#64748b'}}>Costo real</span><span>${sim.costo_real.toFixed(4)}</span></div>
-                      <div className="resumen-row highlight"><span>Ganancia estimada</span><span style={{color:ganancia>=0?'#22c55e':'#ef4444'}}>${ganancia.toFixed(2)}</span></div>
-                    </div>
-                    {ganancia<0&&<div className="alert alert-warning">⚠️ Este precio genera pérdida.</div>}
-                    <div className="form-group"><label>Precio de venta</label><input type="number" value={precioEdit} onChange={e=>setPrecioEdit(e.target.value)}/></div>
-                    <button className="btn btn-primary" onClick={confirmar} disabled={loading}>{loading?<span className="spinner"/>:'✅ Confirmar venta'}</button>
-                    {candidatas.length>1&&(
-                      <div>
-                        <div className="section-title" style={{marginBottom:'.4rem'}}>Otras SIMs</div>
-                        {candidatas.slice(1).map(s=>(
-                          <div key={s.id} style={{display:'flex',justifyContent:'space-between',fontSize:'.8rem',color:'#94a3b8',padding:'.3rem 0'}}>
-                            <span>{s.numero}</span><span>{Number(s.saldo_disponible).toLocaleString()} cr.</span><span style={{color:'#22c55e'}}>${s.ganancia.toFixed(2)}</span>
-                          </div>
-                        ))}
+                  <div key={sim.id}
+                    className={`sim-select-card ${simSel?.id===sim.id?'selected':''}`}
+                    onClick={()=>selSim(sim)}>
+                    <div style={{flex:1}}>
+                      <div style={{display:'flex',alignItems:'center',gap:'.5rem'}}>
+                        <span style={{fontWeight:700,color:'#38bdf8'}}>📱 {simLabel(sim)}</span>
+                        {idx===0&&<span className="badge badge-green">Recomendada</span>}
                       </div>
-                    )}
-                  </>
+                      {sim.nombre&&<div style={{fontSize:'.75rem',color:'#64748b',marginTop:'.1rem'}}>{sim.numero}</div>}
+                      <div style={{display:'flex',gap:'1rem',marginTop:'.4rem',fontSize:'.82rem',color:'#94a3b8'}}>
+                        <span>{Number(sim.saldo_disponible).toLocaleString()} cr.</span>
+                        <span>{sim.recargas_restantes}/{sim.limite_diario} recargas</span>
+                      </div>
+                      <div className="recargas-bar" style={{marginTop:'.5rem'}}>{dots.map((u,i)=><div key={i} className={`recarga-dot ${u?'used':''}`}/>)}</div>
+                    </div>
+                    <div style={{textAlign:'right',flexShrink:0}}>
+                      <div style={{color:'#22c55e',fontWeight:700,fontSize:'1rem'}}>${sim.ganancia.toFixed(2)}</div>
+                      <div style={{fontSize:'.72rem',color:'#64748b'}}>ganancia</div>
+                    </div>
+                  </div>
                 )
-              })()
+              })
           }
         </>
       )}
+
+      {/* PASO 3 — Cliente (opcional) */}
+      {paso===3&&(
+        <>
+          {creandoCliente
+            ? <FormNuevoCliente
+                userId={userId}
+                onCreado={c => {
+                  setClientes(prev => [...prev, c])
+                  setClienteSel(c)
+                  setCreandoCliente(false)
+                  setPaso(4)
+                }}
+                onCancelar={()=>setCreandoCliente(false)}
+              />
+            : <>
+                <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                  <span style={{fontSize:'.85rem',color:'#94a3b8'}}>Selecciona o crea un cliente</span>
+                  <button className="btn btn-secondary btn-sm" onClick={saltarCliente}>Sin cliente →</button>
+                </div>
+                <input value={buscar} onChange={e=>setBuscar(e.target.value)} placeholder="🔍 Buscar cliente..."/>
+                <button className="link-btn" onClick={()=>setCreandoCliente(true)}>+ Crear nuevo cliente</button>
+                {filtrados.map(c => {
+                  const { nivel } = calcularRiesgo(c, config)
+                  return (
+                    <div key={c.id} className="list-item" style={{cursor:'pointer'}} onClick={()=>selCliente(c)}>
+                      <div style={{width:38,height:38,borderRadius:'50%',background:'#1e293b',display:'flex',alignItems:'center',justifyContent:'center',fontWeight:700,flexShrink:0}}>{c.nombre.charAt(0).toUpperCase()}</div>
+                      <div className="list-item-info">
+                        <div className="list-item-title">{c.nombre}</div>
+                        <div className="list-item-sub">Deuda: ${Number(c.deuda_total).toFixed(2)}</div>
+                      </div>
+                      <span className={`badge ${nivelColor[nivel]}`}>{nivel}</span>
+                    </div>
+                  )
+                })}
+                {clientes.length===0&&<div className="empty" style={{padding:'1rem'}}>Sin clientes registrados</div>}
+              </>
+          }
+        </>
+      )}
+
+      {/* PASO 4 — Resumen y confirmación */}
+      {paso===4&&simSel&&(()=>{
+        const precio = parseFloat(precioEdit)||simSel.precio
+        const ganancia = precio - simSel.costo_real - costo_op
+        return (
+          <>
+            <div className="resumen-box">
+              <div className="resumen-row"><span style={{color:'#64748b'}}>Cliente</span><span style={{fontWeight:600}}>{clienteSel?.nombre||<span style={{color:'#475569'}}>Sin cliente</span>}</span></div>
+              <div className="resumen-row"><span style={{color:'#64748b'}}>Recarga</span><span style={{fontWeight:600}}>{tipo} créditos</span></div>
+              <div className="resumen-row"><span style={{color:'#64748b'}}>SIM</span><span style={{fontWeight:600,color:'#38bdf8'}}>📱 {simLabel(simSel)}</span></div>
+              <div className="resumen-row"><span style={{color:'#64748b'}}>Costo real</span><span>${simSel.costo_real.toFixed(4)}</span></div>
+              <div className="resumen-row highlight"><span>Ganancia estimada</span><span style={{color:ganancia>=0?'#22c55e':'#ef4444'}}>${ganancia.toFixed(2)}</span></div>
+            </div>
+            {ganancia<0&&<div className="alert alert-warning">⚠️ Este precio genera pérdida.</div>}
+            <div className="form-group"><label>Precio de venta</label><input type="number" value={precioEdit} onChange={e=>setPrecioEdit(e.target.value)}/></div>
+            <button className="btn btn-primary" onClick={confirmar} disabled={loading}>{loading?<span className="spinner"/>:'✅ Confirmar venta'}</button>
+          </>
+        )
+      })()}
     </div>
   )
 }
@@ -567,7 +669,7 @@ function Historial({ ventas, sims, clientes, onRefresh }) {
   const simsMap = Object.fromEntries(sims.map(s=>[s.id,s]))
   const clientesMap = Object.fromEntries(clientes.map(c=>[c.id,c]))
   const filtradas = [...ventas]
-    .filter(v => filtro==='todos'||v.estado_pago===filtro)
+    .filter(v=>filtro==='todos'||v.estado_pago===filtro)
     .sort((a,b)=>new Date(b.fecha)-new Date(a.fecha))
 
   async function cobrar(v) {
@@ -588,14 +690,14 @@ function Historial({ ventas, sims, clientes, onRefresh }) {
         ))}
       </div>
       {filtradas.map(v => {
-        const cliente = clientesMap[v.cliente_id]
+        const cliente = v.cliente_id ? clientesMap[v.cliente_id] : null
         const sim = simsMap[v.sim_id]
         return (
           <div key={v.id} className="list-item" style={{flexDirection:'column',gap:'.5rem',alignItems:'stretch'}}>
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
               <div>
-                <div style={{fontWeight:700}}>{cliente?.nombre||'—'}</div>
-                <div style={{fontSize:'.75rem',color:'#64748b'}}>{new Date(v.fecha).toLocaleString('es',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})} · {sim?.numero||'—'}</div>
+                <div style={{fontWeight:700}}>{cliente?.nombre||<span style={{color:'#475569'}}>Sin cliente</span>}</div>
+                <div style={{fontSize:'.75rem',color:'#64748b'}}>{new Date(v.fecha).toLocaleString('es',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})} · {sim?simLabel(sim):'—'}</div>
               </div>
               <div style={{textAlign:'right'}}>
                 <div style={{fontWeight:700}}>{v.cantidad} cr.</div>
@@ -621,79 +723,49 @@ function Historial({ ventas, sims, clientes, onRefresh }) {
 
 // ── APP PRINCIPAL ─────────────────────────────────────────
 function App() {
-  const [user, setUser] = useState(undefined) // undefined = cargando
+  const [user, setUser] = useState(undefined)
   const [tab, setTab] = useState('dashboard')
   const [sims, setSims] = useState([])
   const [lotesPorSim, setLotesPorSim] = useState({})
   const [clientes, setClientes] = useState([])
   const [ventas, setVentas] = useState([])
   const [config, setConfig] = useState(null)
-  const cargandoDatos = useRef(false)
+  const cargando = useRef(false)
 
-  // Sesión: solo una vez al montar
   useEffect(() => {
-    sb.auth.getSession().then(({ data }) => {
-      setUser(data.session?.user ?? null)
-    })
-    const { data: { subscription } } = sb.auth.onAuthStateChange((event, session) => {
+    sb.auth.getSession().then(({ data }) => setUser(data.session?.user ?? null))
+    const { data: { subscription } } = sb.auth.onAuthStateChange((_, session) => {
       setUser(session?.user ?? null)
     })
     return () => subscription.unsubscribe()
   }, [])
 
-  // Cargar datos: solo cuando user cambia, con guard para evitar doble fetch
-  useEffect(() => {
-    if (!user) return
-    if (cargandoDatos.current) return
-    cargandoDatos.current = true
-    ;(async () => {
-      try {
-        const { data:s } = await sb.from('sims').select('*').eq('activa', true).order('created_at')
-        const { data:l } = await sb.from('lotes_saldo').select('*').order('fecha_compra')
-        const { data:c } = await sb.from('clientes').select('*').order('nombre')
-        const { data:v } = await sb.from('ventas').select('*').order('fecha', { ascending: false })
-        const { data:cfg } = await sb.from('configuracion').select('*').maybeSingle()
-        setSims(s||[])
-        const por_sim = {}
-        ;(l||[]).forEach(x => { if(!por_sim[x.sim_id]) por_sim[x.sim_id]=[]; por_sim[x.sim_id].push(x) })
-        setLotesPorSim(por_sim)
-        setClientes(c||[])
-        setVentas(v||[])
-        setConfig(cfg)
-      } finally {
-        cargandoDatos.current = false
-      }
-    })()
-  }, [user])
-
-  async function refrescar() {
-    if (!user || cargandoDatos.current) return
-    cargandoDatos.current = true
+  async function cargar() {
+    if (cargando.current) return
+    cargando.current = true
     try {
-      const { data:s } = await sb.from('sims').select('*').eq('activa', true).order('created_at')
+      const { data:s } = await sb.from('sims').select('*').eq('activa',true).order('created_at')
       const { data:l } = await sb.from('lotes_saldo').select('*').order('fecha_compra')
       const { data:c } = await sb.from('clientes').select('*').order('nombre')
-      const { data:v } = await sb.from('ventas').select('*').order('fecha', { ascending: false })
+      const { data:v } = await sb.from('ventas').select('*').order('fecha',{ascending:false})
       const { data:cfg } = await sb.from('configuracion').select('*').maybeSingle()
       setSims(s||[])
       const por_sim = {}
-      ;(l||[]).forEach(x => { if(!por_sim[x.sim_id]) por_sim[x.sim_id]=[]; por_sim[x.sim_id].push(x) })
+      ;(l||[]).forEach(x=>{ if(!por_sim[x.sim_id]) por_sim[x.sim_id]=[]; por_sim[x.sim_id].push(x) })
       setLotesPorSim(por_sim)
       setClientes(c||[])
       setVentas(v||[])
       setConfig(cfg)
-    } finally {
-      cargandoDatos.current = false
-    }
+    } finally { cargando.current = false }
   }
+
+  useEffect(() => { if (user) cargar() }, [user])
 
   async function logout() {
     await sb.auth.signOut()
-    setUser(null)
-    setSims([]); setLotesPorSim({}); setClientes([]); setVentas([]); setConfig(null)
+    setUser(null); setSims([]); setLotesPorSim({}); setClientes([]); setVentas([]); setConfig(null)
   }
 
-  // Cargando sesión
   if (user === undefined) return (
     <div style={{display:'flex',justifyContent:'center',alignItems:'center',height:'100vh'}}>
       <span className="spinner" style={{width:32,height:32,borderWidth:3}}/>
@@ -713,15 +785,15 @@ function App() {
   return (
     <div className="app">
       <div style={{flex:1,overflowY:'auto',WebkitOverflowScrolling:'touch',display:'flex',flexDirection:'column'}}>
-        {tab==='dashboard' && <Dashboard sims={sims} ventas={ventas} lotesPorSim={lotesPorSim} clientes={clientes} config={config}/>}
-        {tab==='sims'      && <Sims sims={sims} lotesPorSim={lotesPorSim} userId={user.id} onRefresh={refrescar}/>}
-        {tab==='ventas'    && <Ventas sims={sims} clientes={clientes} lotesPorSim={lotesPorSim} config={config} userId={user.id} onRefresh={refrescar}/>}
-        {tab==='clientes'  && <Clientes clientes={clientes} config={config} userId={user.id} onRefresh={refrescar}/>}
-        {tab==='historial' && <Historial ventas={ventas} sims={sims} clientes={clientes} onRefresh={refrescar}/>}
+        {tab==='dashboard' && <Dashboard sims={sims} ventas={ventas} lotesPorSim={lotesPorSim} clientes={clientes} config={config} onVender={()=>setTab('ventas')}/>}
+        {tab==='sims'      && <Sims sims={sims} lotesPorSim={lotesPorSim} userId={user.id} onRefresh={cargar}/>}
+        {tab==='ventas'    && <Ventas sims={sims} clientes={clientes} lotesPorSim={lotesPorSim} config={config} userId={user.id} onRefresh={cargar}/>}
+        {tab==='clientes'  && <Clientes clientes={clientes} config={config} userId={user.id} onRefresh={cargar}/>}
+        {tab==='historial' && <Historial ventas={ventas} sims={sims} clientes={clientes} onRefresh={cargar}/>}
       </div>
-      <div style={{position:'sticky',bottom:0}}>
+      <div>
         <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'.3rem .8rem',background:'#0f172a',borderTop:'1px solid #1e293b'}}>
-          <span style={{fontSize:'.75rem',color:'#475569'}}>{user.email}</span>
+          <span style={{fontSize:'.72rem',color:'#475569'}}>{user.email}</span>
           <button onClick={logout} style={{background:'none',border:'none',color:'#64748b',fontSize:'.75rem',cursor:'pointer'}}>Cerrar sesión</button>
         </div>
         <nav className="nav">
