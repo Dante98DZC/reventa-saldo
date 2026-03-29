@@ -9,88 +9,128 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
+  /* FIX #12 — Variables de tipografía y espaciado sistematizados */
+  :root {
+    --text-xs: .72rem;
+    --text-sm: .82rem;
+    --text-base: .9rem;
+    --text-md: 1rem;
+    --text-lg: 1.1rem;
+    --space-xs: .3rem;
+    --space-sm: .5rem;
+    --space-md: .8rem;
+    --space-lg: 1.2rem;
+    --space-xl: 1.5rem;
+  }
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
   html{height:100%;overflow:hidden}
   body{font-family:'Segoe UI',sans-serif;background:#0f172a;color:#e2e8f0;height:100%;overflow:hidden;-webkit-font-smoothing:antialiased}
   .app{max-width:480px;margin:0 auto;height:100vh;height:100dvh;background:#1e293b;display:flex;flex-direction:column;overflow:hidden}
-  .auth{padding:1.5rem;padding-bottom:2rem;display:flex;flex-direction:column;gap:1.2rem;height:100dvh;justify-content:center;overflow-y:auto}
-  .auth-logo{text-align:center;margin-bottom:1rem}
+  .auth{padding:var(--space-xl);padding-bottom:2rem;display:flex;flex-direction:column;gap:var(--space-lg);height:100dvh;justify-content:center;overflow-y:auto}
+  .auth-logo{text-align:center;margin-bottom:var(--space-md)}
   .auth-logo h1{font-size:1.8rem;font-weight:800;color:#38bdf8}
-  .auth-logo p{color:#94a3b8;font-size:.9rem;margin-top:.3rem}
-  .auth-tabs{display:flex;gap:.5rem;background:#0f172a;border-radius:10px;padding:.3rem}
-  .auth-tab{flex:1;padding:.6rem;border:none;border-radius:8px;cursor:pointer;font-size:.9rem;font-weight:600;transition:.2s;background:transparent;color:#64748b}
+  .auth-logo p{color:#94a3b8;font-size:var(--text-base);margin-top:var(--space-xs)}
+  .auth-tabs{display:flex;gap:var(--space-sm);background:#0f172a;border-radius:10px;padding:var(--space-xs)}
+  .auth-tab{flex:1;padding:.6rem;border:none;border-radius:8px;cursor:pointer;font-size:var(--text-base);font-weight:600;transition:.2s;background:transparent;color:#64748b}
   .auth-tab.active{background:#38bdf8;color:#0f172a}
   .form-group{display:flex;flex-direction:column;gap:.4rem}
-  .form-group label{font-size:.8rem;color:#94a3b8;font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+  .form-group label{font-size:var(--text-xs);color:#94a3b8;font-weight:600;text-transform:uppercase;letter-spacing:.05em}
   input,select{background:#0f172a;border:1.5px solid #334155;border-radius:8px;padding:.75rem 1rem;color:#e2e8f0;font-size:16px;width:100%;outline:none;transition:.2s;-webkit-appearance:none;appearance:none}
   input:focus,select:focus{border-color:#38bdf8}
   select option{background:#0f172a}
-  .btn{padding:.75rem 1.5rem;border:none;border-radius:8px;cursor:pointer;font-size:1rem;font-weight:600;transition:.2s;width:100%;touch-action:manipulation;user-select:none}
+  .btn{padding:.75rem var(--space-xl);border:none;border-radius:8px;cursor:pointer;font-size:var(--text-md);font-weight:600;transition:.2s;width:100%;touch-action:manipulation;user-select:none;
+    /* FIX #13 — Tamaño mínimo para que el spinner no colapse el botón */
+    min-height:44px;display:flex;align-items:center;justify-content:center;}
   .btn-primary{background:#38bdf8;color:#0f172a}
   .btn-primary:active{background:#7dd3fc}
   .btn-primary:disabled{background:#334155;color:#64748b;cursor:not-allowed}
   .btn-secondary{background:#334155;color:#e2e8f0}
   .btn-secondary:active{background:#475569}
   .btn-danger{background:#ef4444;color:#fff}
-  .btn-sm{padding:.5rem .9rem;font-size:.82rem;width:auto}
+  /* FIX #13 — btn-sm con tamaño fijo para evitar colapso con spinner */
+  .btn-sm{padding:.5rem .9rem;font-size:var(--text-sm);width:auto;min-height:36px}
   .btn-success{background:#22c55e;color:#fff}
   .nav{display:flex;background:#0f172a;border-top:1px solid #1e293b;padding-bottom:env(safe-area-inset-bottom)}
-  .nav-item{flex:1;display:flex;flex-direction:column;align-items:center;padding:.7rem .3rem;cursor:pointer;border:none;background:transparent;color:#64748b;font-size:.65rem;gap:.2rem;transition:.2s;touch-action:manipulation;user-select:none;min-height:56px}
+  .nav-item{flex:1;display:flex;flex-direction:column;align-items:center;padding:.7rem var(--space-xs);cursor:pointer;border:none;background:transparent;color:#64748b;font-size:.65rem;gap:.2rem;transition:.2s;touch-action:manipulation;user-select:none;min-height:56px}
   .nav-item.active{color:#38bdf8}
   .nav-item svg{width:22px;height:22px}
-  .card{background:#0f172a;border-radius:12px;padding:1.2rem;border:1px solid #1e293b}
-  .card-grid{display:grid;grid-template-columns:1fr 1fr;gap:.8rem}
+  .card{background:#0f172a;border-radius:12px;padding:var(--space-lg);border:1px solid #1e293b}
+  .card-grid{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-md)}
   .metric{background:#0f172a;border-radius:12px;padding:1rem;border:1px solid #1e293b}
-  .metric-label{font-size:.72rem;color:#64748b;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.3rem}
+  .metric-label{font-size:var(--text-xs);color:#64748b;text-transform:uppercase;letter-spacing:.05em;margin-bottom:var(--space-xs)}
   .metric-value{font-size:1.4rem;font-weight:800}
   .metric-value.green{color:#22c55e}
   .metric-value.blue{color:#38bdf8}
   .metric-value.yellow{color:#fbbf24}
   .metric-value.red{color:#ef4444}
-  .page{padding:1rem;display:flex;flex-direction:column;gap:1rem;padding-bottom:1.5rem;overflow-y:auto;-webkit-overflow-scrolling:touch;flex:1}
-  .page-header{display:flex;align-items:center;justify-content:space-between;padding:.5rem 0;position:sticky;top:0;background:#1e293b;z-index:10}
-  .page-title{font-size:1.1rem;font-weight:700}
-  .list-item{background:#0f172a;border-radius:10px;padding:1rem;border:1px solid #1e293b;display:flex;align-items:center;gap:.8rem}
+  /* FIX #7 — padding-bottom para que el FAB no tape el último elemento */
+  .page{padding:1rem;display:flex;flex-direction:column;gap:1rem;padding-bottom:5rem;overflow-y:auto;-webkit-overflow-scrolling:touch;flex:1}
+  .page-header{display:flex;align-items:center;justify-content:space-between;padding:var(--space-sm) 0;position:sticky;top:0;background:#1e293b;z-index:10}
+  .page-title{font-size:var(--text-lg);font-weight:700}
+  .list-item{background:#0f172a;border-radius:10px;padding:1rem;border:1px solid #1e293b;display:flex;align-items:center;gap:var(--space-md)}
   .list-item-info{flex:1}
-  .list-item-title{font-weight:600;font-size:.95rem}
-  .list-item-sub{font-size:.78rem;color:#64748b;margin-top:.15rem}
+  .list-item-title{font-weight:600;font-size:var(--text-base)}
+  .list-item-sub{font-size:var(--text-xs);color:#64748b;margin-top:.15rem}
   .badge{display:inline-block;padding:.2rem .6rem;border-radius:999px;font-size:.7rem;font-weight:700}
   .badge-green{background:#064e3b;color:#34d399}
   .badge-yellow{background:#451a03;color:#fbbf24}
   .badge-red{background:#450a0a;color:#f87171}
   .badge-blue{background:#0c2a4a;color:#38bdf8}
   .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:flex-end;z-index:100;padding-bottom:env(safe-area-inset-bottom)}
-  .modal{background:#1e293b;border-radius:16px 16px 0 0;padding:1.5rem;padding-bottom:calc(1.5rem + env(safe-area-inset-bottom));width:100%;max-width:480px;margin:0 auto;display:flex;flex-direction:column;gap:1rem;max-height:92dvh;overflow-y:auto;-webkit-overflow-scrolling:touch}
-  .modal-title{font-size:1.1rem;font-weight:700}
-  .alert{padding:.8rem 1rem;border-radius:8px;font-size:.85rem;border:1px solid}
+  .modal{background:#1e293b;border-radius:16px 16px 0 0;padding:var(--space-xl);padding-bottom:calc(var(--space-xl) + env(safe-area-inset-bottom));width:100%;max-width:480px;margin:0 auto;display:flex;flex-direction:column;gap:1rem;max-height:92dvh;overflow-y:auto;-webkit-overflow-scrolling:touch}
+  .modal-title{font-size:var(--text-lg);font-weight:700}
+  .alert{padding:var(--space-md) 1rem;border-radius:8px;font-size:var(--text-sm);border:1px solid}
   .alert-error{background:#450a0a;border-color:#ef4444;color:#fca5a5}
   .alert-success{background:#064e3b;border-color:#22c55e;color:#86efac}
   .alert-warning{background:#451a03;border-color:#f59e0b;color:#fcd34d}
-  .sim-card{background:#0f172a;border-radius:12px;padding:1.2rem;border:1px solid #1e293b}
+  .alert-info{background:#0c2a4a;border-color:#38bdf8;color:#7dd3fc}
+  .sim-card{background:#0f172a;border-radius:12px;padding:var(--space-lg);border:1px solid #1e293b}
   .sim-card.selected{border-color:#38bdf8;background:#0c1f35}
-  .sim-name{font-size:1rem;font-weight:700;color:#38bdf8;margin-bottom:.2rem}
-  .sim-number{font-size:.78rem;color:#64748b;margin-bottom:.5rem}
-  .sim-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.5rem;margin-top:.8rem}
+  .sim-name{font-size:var(--text-md);font-weight:700;color:#38bdf8;margin-bottom:.2rem}
+  .sim-number{font-size:var(--text-xs);color:#64748b;margin-bottom:var(--space-sm)}
+  .sim-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:var(--space-sm);margin-top:var(--space-md)}
   .sim-stat{text-align:center}
-  .sim-stat-val{font-size:1rem;font-weight:700}
+  .sim-stat-val{font-size:var(--text-md);font-weight:700}
   .sim-stat-label{font-size:.65rem;color:#64748b;margin-top:.1rem}
-  .recargas-bar{display:flex;gap:.3rem;margin-top:.8rem}
+  .recargas-bar{display:flex;gap:var(--space-xs);margin-top:var(--space-md)}
   .recarga-dot{height:8px;flex:1;border-radius:4px;background:#1e293b}
   .recarga-dot.used{background:#38bdf8}
-  .tipo-btn{flex:1;padding:1rem;border-radius:10px;border:2px solid #334155;background:#0f172a;color:#e2e8f0;font-size:1rem;font-weight:700;cursor:pointer;transition:.2s;text-align:center;touch-action:manipulation}
+  .tipo-btn{flex:1;padding:1rem;border-radius:10px;border:2px solid #334155;background:#0f172a;color:#e2e8f0;font-size:var(--text-md);font-weight:700;cursor:pointer;transition:.2s;text-align:center;touch-action:manipulation}
   .tipo-btn.selected{border-color:#38bdf8;background:#0c2a4a;color:#38bdf8}
-  .sim-select-card{border-radius:10px;padding:.9rem 1rem;border:2px solid #334155;background:#0f172a;cursor:pointer;transition:.2s;touch-action:manipulation;display:flex;align-items:center;gap:.8rem}
+  .tipo-btn:disabled{opacity:.4;cursor:not-allowed}
+  .sim-select-card{border-radius:10px;padding:.9rem 1rem;border:2px solid #334155;background:#0f172a;cursor:pointer;transition:.2s;touch-action:manipulation;display:flex;align-items:center;gap:var(--space-md)}
   .sim-select-card.selected{border-color:#38bdf8;background:#0c1f35}
   .sim-select-card.recomendada{position:relative}
   .resumen-box{background:#0f172a;border-radius:10px;padding:1rem;border:1px solid #1e293b;display:flex;flex-direction:column;gap:.6rem}
-  .resumen-row{display:flex;justify-content:space-between;font-size:.9rem}
-  .resumen-row.highlight{font-weight:700;font-size:1rem;color:#22c55e;border-top:1px solid #1e293b;padding-top:.6rem;margin-top:.2rem}
-  .divider{height:1px;background:#1e293b;margin:.3rem 0}
-  .section-title{font-size:.75rem;color:#64748b;text-transform:uppercase;letter-spacing:.05em;font-weight:700}
-  .empty{text-align:center;color:#475569;padding:2rem;font-size:.9rem}
-  .spinner{display:inline-block;width:18px;height:18px;border:2px solid #334155;border-top-color:#38bdf8;border-radius:50%;animation:spin .7s linear infinite}
+  .resumen-row{display:flex;justify-content:space-between;font-size:var(--text-base)}
+  .resumen-row.highlight{font-weight:700;font-size:var(--text-md);color:#22c55e;border-top:1px solid #1e293b;padding-top:.6rem;margin-top:.2rem}
+  .divider{height:1px;background:#1e293b;margin:var(--space-xs) 0}
+  .section-title{font-size:var(--text-xs);color:#64748b;text-transform:uppercase;letter-spacing:.05em;font-weight:700}
+  .empty{text-align:center;color:#475569;padding:2rem;font-size:var(--text-base)}
+  /* FIX #13 — Spinner con tamaño fijo, no colapsa el botón */
+  .spinner{display:inline-block;width:18px;height:18px;min-width:18px;min-height:18px;border:2px solid #334155;border-top-color:#38bdf8;border-radius:50%;animation:spin .7s linear infinite}
   .fab{position:fixed;bottom:calc(80px + env(safe-area-inset-bottom));right:1.2rem;width:58px;height:58px;border-radius:50%;background:#38bdf8;color:#0f172a;border:none;font-size:1.6rem;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(56,189,248,.4);touch-action:manipulation;z-index:50}
-  .link-btn{background:none;border:none;color:#38bdf8;font-size:.85rem;cursor:pointer;padding:.2rem 0;text-decoration:underline;touch-action:manipulation}
+  .potencial-card{background:#0f172a;border-radius:12px;padding:var(--space-lg);border:1px solid #334155;cursor:pointer;transition:.2s}
+  .potencial-card:active{border-color:#38bdf8}
+  .escenario-row{display:grid;grid-template-columns:52px 1fr 1fr 1fr;gap:.3rem;align-items:start;padding:var(--space-sm) 0;border-bottom:1px solid #1e293b;font-size:var(--text-sm)}
+  .escenario-row:last-child{border-bottom:none}
+  .escenario-row.best{color:#38bdf8;font-weight:700}
+  .escenario-cell{display:flex;flex-direction:column;gap:.1rem}
+  .escenario-val{font-size:var(--text-sm);font-weight:600}
+  .escenario-lbl{font-size:.62rem;color:#475569;text-transform:uppercase;letter-spacing:.03em}
+  .sim-detalle{background:#0f172a;border-radius:10px;padding:.9rem;border:1px solid #1e293b;margin-top:var(--space-sm)}
+  .limitante{display:flex;align-items:center;gap:var(--space-sm);font-size:var(--text-sm);padding:var(--space-sm) var(--space-md);border-radius:8px;margin-top:.6rem}
+  .limitante.verde{background:#064e3b;color:#34d399}
+  .limitante.amarillo{background:#451a03;color:#fbbf24}
+  .limitante.rojo{background:#450a0a;color:#f87171}
+  .limitante.gris{background:#1e293b;color:#64748b}
+  .collapse-btn{background:none;border:none;color:#64748b;font-size:var(--text-sm);cursor:pointer;display:flex;align-items:center;gap:var(--space-xs);padding:var(--space-xs) 0;touch-action:manipulation}
+  .tipo-tab{flex:1;padding:.55rem;border-radius:8px;border:1.5px solid #334155;background:transparent;color:#64748b;font-size:var(--text-base);font-weight:700;cursor:pointer;transition:.2s;touch-action:manipulation}
+  .tipo-tab.active{border-color:#38bdf8;background:#0c2a4a;color:#38bdf8}
+  .link-btn{background:none;border:none;color:#38bdf8;font-size:var(--text-sm);cursor:pointer;padding:.2rem 0;text-decoration:underline;touch-action:manipulation}
+  /* FIX #6 — Alerta de cliente con riesgo alto */
+  .riesgo-overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);display:flex;align-items:center;justify-content:center;z-index:200;padding:1.5rem}
+  .riesgo-card{background:#1e293b;border-radius:16px;padding:var(--space-xl);border:1.5px solid #ef4444;width:100%;max-width:400px;display:flex;flex-direction:column;gap:1rem}
   @keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </head>
@@ -107,13 +147,14 @@ window._sb = supabase.createClient(
 
 <script type="text/babel">
 const sb = window._sb
-const { useState, useEffect, useRef } = React
+const { useState, useEffect, useRef, useMemo, useCallback } = React
 
 // ── MOTORES ────────────────────────────────────────────────
 function calcularRiesgo(cliente, config) {
   if (!cliente?.fecha_ultima_compra) return { score:0, nivel:'bajo' }
   const limite = config?.limite_deuda_cliente || 500
-  const dias_inactivo = (Date.now() - new Date(cliente.fecha_ultima_compra)) / 86400000
+  // FIX #7 — Comparar fechas en UTC de forma consistente
+  const dias_inactivo = (Date.now() - new Date(cliente.fecha_ultima_compra).getTime()) / 86400000
   const s1 = Math.min((cliente.deuda_total / limite) * 100, 100) * 0.5
   const s2 = Math.min((cliente.dias_promedio_pago / 30) * 100, 100) * 0.3
   const s3 = Math.min((dias_inactivo / 30) * 100, 100) * 0.2
@@ -134,7 +175,18 @@ function precioSugerido(costo_real, tipo, config) {
 }
 
 function simLabel(sim) {
-  return sim.nombre || sim.numero
+  return sim?.nombre || sim?.numero || '—'
+}
+
+// FIX #7 — Comparar "hoy" en UTC de forma consistente con las fechas de Supabase
+function esHoy(fechaISO) {
+  const ahora = new Date()
+  const fecha = new Date(fechaISO)
+  return (
+    fecha.getUTCFullYear() === ahora.getUTCFullYear() &&
+    fecha.getUTCMonth() === ahora.getUTCMonth() &&
+    fecha.getUTCDate() === ahora.getUTCDate()
+  )
 }
 
 // ── COMPONENTES BASE ──────────────────────────────────────
@@ -152,7 +204,270 @@ function Modal({ title, onClose, children }) {
   )
 }
 
-// ── FORM NUEVO CLIENTE (reutilizable) ─────────────────────
+// FIX #6 — Modal de confirmación para cliente con riesgo alto
+function ModalRiesgoAlto({ cliente, onConfirmar, onCancelar }) {
+  return (
+    <div className="riesgo-overlay">
+      <div className="riesgo-card">
+        <div style={{fontSize:'1.3rem',fontWeight:800,color:'#ef4444'}}>⚠️ Cliente de riesgo alto</div>
+        <div style={{fontSize:'.9rem',color:'#94a3b8'}}>
+          <strong style={{color:'#e2e8f0'}}>{cliente.nombre}</strong> tiene un perfil de riesgo alto
+          {cliente.deuda_total > 0 && <span> y una deuda pendiente de <strong style={{color:'#fbbf24'}}>${Number(cliente.deuda_total).toFixed(2)}</strong></span>}.
+        </div>
+        <div style={{fontSize:'.82rem',color:'#64748b'}}>¿Deseas continuar con esta venta de todas formas?</div>
+        <div style={{display:'flex',gap:'.6rem',marginTop:'.3rem'}}>
+          <button className="btn btn-secondary" onClick={onCancelar}>Cancelar</button>
+          <button className="btn btn-danger" onClick={onConfirmar}>Continuar de todas formas</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── PANEL POTENCIAL ───────────────────────────────────────
+function PanelPotencial({ sims, lotesPorSim, config, onClose }) {
+  const [tipo, setTipo] = useState(240)
+  const [precio, setPrecio] = useState('')
+  const [meta, setMeta] = useState('')
+  const [verSims, setVerSims] = useState(false)
+  const [verMeta, setVerMeta] = useState(false)
+
+  const costo_op = config?.costo_operativo || 5
+  const margenes = { 120: config?.margen_tipo_120||25, 240: config?.margen_tipo_240||20, 360: config?.margen_tipo_360||15 }
+
+  function calcularSim(sim, t) {
+    const lotes = lotesPorSim[sim.id] || []
+    const cpp = cppSim(lotes)
+    const costo_real = +(cpp * t).toFixed(4)
+    const precio_sugerido = +(costo_real * (1 + margenes[t] / 100)).toFixed(2)
+    const precio_minimo = +(costo_real + costo_op).toFixed(2)
+    const precio_usado = parseFloat(precio) || precio_sugerido
+    const ganancia_unitaria = +(precio_usado - costo_real - costo_op).toFixed(2)
+    const recargas_por_saldo = cpp > 0 ? Math.floor(sim.saldo_disponible / (t + costo_op)) : 0
+    const recargas_hoy = Math.min(recargas_por_saldo, sim.recargas_restantes)
+    const ganancia_hoy = +(ganancia_unitaria * recargas_hoy).toFixed(2)
+    const sin_lotes = lotes.length === 0
+    return { cpp, costo_real, precio_sugerido, precio_minimo, ganancia_unitaria, recargas_por_saldo, recargas_hoy, ganancia_hoy, sin_lotes }
+  }
+
+  const simsActivas = sims.filter(s => s.activa)
+  function totalEscenario(t) {
+    return simsActivas.reduce((acc, sim) => {
+      const d = calcularSim(sim, t)
+      // ganancia_bruta = precio_venta - costo_real (antes de costo operativo)
+      const bruta_unitaria = +(((parseFloat(precio) || d.precio_sugerido) - d.costo_real)).toFixed(2)
+      const bruta_hoy = +(bruta_unitaria * d.recargas_hoy).toFixed(2)
+      const costo_total_hoy = +(costo_op * d.recargas_hoy).toFixed(2)
+      return {
+        recargas: acc.recargas + d.recargas_hoy,
+        ganancia: +(acc.ganancia + d.ganancia_hoy).toFixed(2),
+        bruta: +(acc.bruta + bruta_hoy).toFixed(2),
+        costo_op_total: +(acc.costo_op_total + costo_total_hoy).toFixed(2)
+      }
+    }, { recargas: 0, ganancia: 0, bruta: 0, costo_op_total: 0 })
+  }
+
+  const escenarios = [120, 240, 360].map(t => ({ tipo: t, ...totalEscenario(t) }))
+  // FIX #5 — Proteger reduce cuando no hay escenarios con ganancia positiva
+  const mejor = escenarios.length > 0 ? escenarios.reduce((a, b) => b.ganancia > a.ganancia ? b : a) : { tipo: 240, recargas: 0, ganancia: 0 }
+
+  const precioMinimo = simsActivas.length > 0 ? Math.max(...simsActivas.map(s => calcularSim(s, tipo).precio_minimo)) : 0
+  const precioSugeridoGlobal = simsActivas.length > 0
+    ? Math.max(...simsActivas.map(s => calcularSim(s, tipo).precio_sugerido))
+    : 0
+  const precioUsado = parseFloat(precio) || precioSugeridoGlobal
+  const aPerdia = precioUsado < precioMinimo
+
+  const totalActual = totalEscenario(tipo)
+
+  function getLimitante() {
+    const totalSaldo = simsActivas.reduce((s, sim) => {
+      const d = calcularSim(sim, tipo)
+      return s + d.recargas_por_saldo
+    }, 0)
+    const totalHoy = simsActivas.reduce((s, sim) => s + sim.recargas_restantes, 0)
+    if (totalSaldo === 0 && totalHoy === 0) return { tipo: 'gris', msg: 'Sin capacidad hoy' }
+    if (totalHoy === 0) return { tipo: 'gris', msg: 'Recargas del día agotadas' }
+    if (totalSaldo === 0) return { tipo: 'rojo', msg: 'Limitante: saldo insuficiente' }
+    if (totalHoy < totalSaldo) return { tipo: 'amarillo', msg: 'Limitante: recargas del día' }
+    return { tipo: 'verde', msg: 'Sin limitantes hoy' }
+  }
+  const limitante = getLimitante()
+  const iconLimitante = { verde:'🟢', amarillo:'🟡', rojo:'🔴', gris:'⚫' }
+
+  const metaNum = parseFloat(meta) || 0
+  const gananciaUnitaria = simsActivas.length > 0 ? calcularSim(simsActivas[0], tipo).ganancia_unitaria : 0
+  const recargasParaMeta = gananciaUnitaria > 0 ? Math.ceil(metaNum / gananciaUnitaria) : 0
+  const recargasDisponibles = totalActual.recargas
+  const faltanRecargas = Math.max(recargasParaMeta - recargasDisponibles, 0)
+  const gananciaPosible = +(gananciaUnitaria * recargasDisponibles).toFixed(2)
+  const faltaDinero = +(metaNum - gananciaPosible).toFixed(2)
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal" onClick={e=>e.stopPropagation()}>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+          <span className="modal-title">💰 Simulador de potencial</span>
+          <button onClick={onClose} style={{background:'none',border:'none',color:'#64748b',fontSize:'1.2rem',cursor:'pointer'}}>✕</button>
+        </div>
+
+        <div style={{background:'#0c2a4a',borderRadius:10,padding:'1rem',border:'1px solid #1e4a6e'}}>
+          <div style={{fontSize:'var(--text-xs)',color:'#64748b',marginBottom:'var(--space-xs)'}}>MEJOR ESCENARIO HOY</div>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+            <div>
+              <div style={{fontWeight:800,fontSize:'1.1rem',color:'#38bdf8'}}>Recargas de {mejor.tipo} cr.</div>
+              <div style={{fontSize:'var(--text-sm)',color:'#94a3b8',marginTop:'.2rem'}}>{mejor.recargas} recargas · ${mejor.ganancia.toFixed(2)} ganancia</div>
+            </div>
+            <div style={{fontSize:'1.5rem'}}>✨</div>
+          </div>
+          <div className={`limitante ${limitante.tipo}`}>
+            {iconLimitante[limitante.tipo]} {limitante.msg}
+          </div>
+        </div>
+
+        <div>
+          <div className="section-title" style={{marginBottom:'var(--space-sm)'}}>Simular por tipo</div>
+          <div style={{display:'flex',gap:'var(--space-sm)'}}>
+            {[120,240,360].map(t=>(
+              <button key={t} className={`tipo-tab ${tipo===t?'active':''}`} onClick={()=>{setTipo(t);setPrecio('')}}>
+                {t} cr.
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="form-group">
+          <label>Precio de venta</label>
+          <input type="number" value={precio}
+            onChange={e=>setPrecio(e.target.value)}
+            placeholder={`Sugerido: ${precioSugeridoGlobal.toFixed(2)}`}/>
+          <div style={{display:'flex',justifyContent:'space-between',fontSize:'var(--text-xs)',marginTop:'var(--space-xs)'}}>
+            <span style={{color:'#64748b'}}>Mínimo sin pérdida: <strong style={{color:'#f87171'}}>${precioMinimo.toFixed(2)}</strong></span>
+            {aPerdia && <span style={{color:'#ef4444',fontWeight:700}}>⚠️ A pérdida</span>}
+          </div>
+        </div>
+
+        <div>
+          <div className="section-title" style={{marginBottom:'.4rem'}}>Comparar escenarios</div>
+          <div style={{background:'#0f172a',borderRadius:10,padding:'var(--space-md)',border:'1px solid #1e293b'}}>
+            {/* Header */}
+            <div style={{display:'grid',gridTemplateColumns:'52px 1fr 1fr 1fr',gap:'.3rem',fontSize:'.62rem',color:'#475569',textTransform:'uppercase',letterSpacing:'.03em',marginBottom:'var(--space-xs)',paddingBottom:'var(--space-xs)',borderBottom:'1px solid #1e293b'}}>
+              <span>Tipo</span>
+              <span>Recargas</span>
+              <span>G. bruta</span>
+              <span style={{textAlign:'right'}}>Utilidad</span>
+            </div>
+            {escenarios.map(e=>{
+              const esBest = e.tipo === mejor.tipo
+              return (
+                <div key={e.tipo} className={`escenario-row ${esBest?'best':''}`}
+                  style={{cursor:'pointer'}} onClick={()=>{setTipo(e.tipo);setPrecio('')}}>
+                  {/* Tipo */}
+                  <div className="escenario-cell">
+                    <span className="escenario-val" style={{color:esBest?'#38bdf8':'#e2e8f0'}}>{e.tipo} cr.</span>
+                    {esBest && <span style={{fontSize:'.6rem',color:'#38bdf8'}}>✨ mejor</span>}
+                  </div>
+                  {/* Recargas */}
+                  <div className="escenario-cell">
+                    <span className="escenario-val" style={{color:'#94a3b8'}}>{e.recargas}</span>
+                    <span className="escenario-lbl">recargas</span>
+                  </div>
+                  {/* Ganancia bruta (precio - costo_real, sin descontar costo_op) */}
+                  <div className="escenario-cell">
+                    <span className="escenario-val" style={{color:'#fbbf24'}}>${e.bruta.toFixed(2)}</span>
+                    <span className="escenario-lbl">sin op.</span>
+                  </div>
+                  {/* Utilidad neta (ganancia bruta - costo operativo total) */}
+                  <div className="escenario-cell" style={{alignItems:'flex-end'}}>
+                    <span className="escenario-val" style={{color:esBest?'#22c55e':e.ganancia>=0?'#86efac':'#f87171'}}>${e.ganancia.toFixed(2)}</span>
+                    <span className="escenario-lbl" style={{textAlign:'right'}}>utilidad</span>
+                  </div>
+                </div>
+              )
+            })}
+            {/* Leyenda costo operativo */}
+            <div style={{marginTop:'var(--space-sm)',paddingTop:'var(--space-sm)',borderTop:'1px solid #1e293b',fontSize:'.65rem',color:'#475569',display:'flex',gap:'1rem'}}>
+              <span>G. bruta = precio − costo saldo</span>
+              <span>Utilidad = bruta − op. (${costo_op}/recarga)</span>
+            </div>
+          </div>
+        </div>
+
+        <div style={{background:'#064e3b',borderRadius:10,padding:'.9rem',border:'1px solid #166534',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+          <div>
+            <div style={{fontSize:'var(--text-xs)',color:'#86efac'}}>CON {tipo} CR. AL PRECIO ACTUAL</div>
+            <div style={{fontWeight:800,fontSize:'1.1rem',color:'#22c55e',marginTop:'.2rem'}}>${totalActual.ganancia.toFixed(2)}</div>
+          </div>
+          <div style={{textAlign:'right',fontSize:'var(--text-sm)',color:'#86efac'}}>
+            <div>{totalActual.recargas} recargas</div>
+            <div style={{fontSize:'var(--text-xs)',color:'#34d399',marginTop:'.1rem'}}>posibles hoy</div>
+          </div>
+        </div>
+
+        <div>
+          <button className="collapse-btn" onClick={()=>setVerSims(v=>!v)}>
+            {verSims?'▼':'▶'} Desglose por SIM
+          </button>
+          {verSims && simsActivas.map(sim=>{
+            const d = calcularSim(sim, tipo)
+            return (
+              <div key={sim.id} className="sim-detalle">
+                <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start'}}>
+                  <div>
+                    <div style={{fontWeight:700,color:'#38bdf8'}}>📱 {simLabel(sim)}</div>
+                    <div style={{fontSize:'var(--text-xs)',color:'#64748b',marginTop:'.2rem'}}>
+                      {Number(sim.saldo_disponible).toLocaleString()} cr. · cpp ${d.cpp.toFixed(4)}
+                    </div>
+                    {d.sin_lotes && <div style={{fontSize:'var(--text-xs)',color:'#fbbf24',marginTop:'.2rem'}}>⚠️ Sin lotes — costo desconocido</div>}
+                  </div>
+                  <div style={{textAlign:'right'}}>
+                    <div style={{fontWeight:700,color:'#22c55e'}}>${d.ganancia_hoy.toFixed(2)}</div>
+                    <div style={{fontSize:'var(--text-xs)',color:'#64748b'}}>{d.recargas_hoy} hoy / {d.recargas_por_saldo} total</div>
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+
+        <div>
+          <button className="collapse-btn" onClick={()=>setVerMeta(v=>!v)}>
+            {verMeta?'▼':'▶'} Calcular meta diaria
+          </button>
+          {verMeta && (
+            <div style={{display:'flex',flexDirection:'column',gap:'var(--space-md)',marginTop:'.4rem'}}>
+              <div className="form-group">
+                <label>Quiero ganar ($)</label>
+                <input type="number" value={meta} onChange={e=>setMeta(e.target.value)} placeholder="Ej: 200"/>
+              </div>
+              {metaNum > 0 && (
+                <div style={{background:'#0f172a',borderRadius:10,padding:'1rem',border:'1px solid #1e293b',display:'flex',flexDirection:'column',gap:'var(--space-sm)'}}>
+                  <div style={{display:'flex',justifyContent:'space-between',fontSize:'var(--text-sm)'}}>
+                    <span style={{color:'#64748b'}}>Recargas necesarias</span>
+                    <span style={{fontWeight:700}}>{recargasParaMeta} de {tipo} cr.</span>
+                  </div>
+                  <div style={{display:'flex',justifyContent:'space-between',fontSize:'var(--text-sm)'}}>
+                    <span style={{color:'#64748b'}}>Recargas disponibles hoy</span>
+                    <span style={{fontWeight:700,color:recargasDisponibles>=recargasParaMeta?'#22c55e':'#fbbf24'}}>{recargasDisponibles}</span>
+                  </div>
+                  {faltanRecargas > 0
+                    ? <>
+                        <div className="divider"/>
+                        <div style={{fontSize:'var(--text-sm)',color:'#fbbf24'}}>⚠️ Te faltan {faltanRecargas} recargas para alcanzar tu meta</div>
+                        <div style={{fontSize:'var(--text-sm)',color:'#fbbf24'}}>Con lo disponible ganarías ${gananciaPosible.toFixed(2)} (faltan ${faltaDinero.toFixed(2)})</div>
+                      </>
+                    : <div style={{fontSize:'var(--text-sm)',color:'#22c55e',fontWeight:700}}>✅ Puedes alcanzar tu meta hoy</div>
+                  }
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function FormNuevoCliente({ userId, onCreado, onCancelar }) {
   const [nombre, setNombre] = useState('')
   const [tel, setTel] = useState('')
@@ -171,7 +486,7 @@ function FormNuevoCliente({ userId, onCreado, onCancelar }) {
   }
 
   return (
-    <div style={{display:'flex',flexDirection:'column',gap:'.8rem'}}>
+    <div style={{display:'flex',flexDirection:'column',gap:'var(--space-md)'}}>
       {err && <div className="alert alert-error">{err}</div>}
       <div className="form-group">
         <label>Nombre</label>
@@ -232,52 +547,95 @@ function Auth({ onAuth }) {
 }
 
 // ── DASHBOARD ─────────────────────────────────────────────
+// FIX #11 — useMemo para clientesMap y simsMap
 function Dashboard({ sims, ventas, lotesPorSim, clientes, config, onVender }) {
+  const [panelPotencial, setPanelPotencial] = useState(false)
+
   const saldo_total = sims.reduce((s,sim) => s + Number(sim.saldo_disponible), 0)
   const ganancia_total = ventas.filter(v=>v.estado_pago==='pagado').reduce((s,v)=>s+Number(v.ganancia),0)
-  const hoy = new Date().toDateString()
-  const ganancia_hoy = ventas.filter(v=>v.estado_pago==='pagado'&&new Date(v.fecha).toDateString()===hoy).reduce((s,v)=>s+Number(v.ganancia),0)
+
+  // FIX #7 — Usar esHoy() con UTC
+  const ganancia_hoy = ventas.filter(v=>v.estado_pago==='pagado'&&esHoy(v.fecha)).reduce((s,v)=>s+Number(v.ganancia),0)
   const pendiente = ventas.filter(v=>v.estado_pago==='pendiente').reduce((s,v)=>s+Number(v.precio_venta),0)
   const recargas_hoy = sims.reduce((s,sim)=>s+sim.recargas_restantes,0)
-  const en_riesgo = clientes.filter(c=>calcularRiesgo(c,config).nivel==='alto').length
-  const recientes = [...ventas].sort((a,b)=>new Date(b.fecha)-new Date(a.fecha)).slice(0,5)
-  const clientesMap = Object.fromEntries(clientes.map(c=>[c.id,c]))
-  const simsMap = Object.fromEntries(sims.map(s=>[s.id,s]))
+
+  // FIX #9 — Memoizar mapa de riesgos
+  const riesgosMap = useMemo(() =>
+    Object.fromEntries(clientes.map(c => [c.id, calcularRiesgo(c, config)]))
+  , [clientes, config])
+
+  const en_riesgo = clientes.filter(c=>riesgosMap[c.id]?.nivel==='alto').length
+  const recientes = useMemo(() => [...ventas].sort((a,b)=>new Date(b.fecha)-new Date(a.fecha)).slice(0,5), [ventas])
+
+  // FIX #11 — useMemo para mapas
+  const clientesMap = useMemo(() => Object.fromEntries(clientes.map(c=>[c.id,c])), [clientes])
+  const simsMap = useMemo(() => Object.fromEntries(sims.map(s=>[s.id,s])), [sims])
+
+  // FIX #5 — Proteger Math.max cuando no hay SIMs activas
+  const maxGanancia = useMemo(() => {
+    const simsActivas = sims.filter(s=>s.activa)
+    if (simsActivas.length === 0) return 0
+    const ganancias = [120,240,360].map(t =>
+      simsActivas.reduce((acc,sim) => {
+        const lotes = lotesPorSim[sim.id]||[]
+        const cpp = cppSim(lotes)
+        const cr = +(cpp*t).toFixed(4)
+        const ps = +(cr*(1+(config?.[`margen_tipo_${t}`]||20)/100)).toFixed(2)
+        const gu = +(ps-cr-(config?.costo_operativo||5)).toFixed(2)
+        const rh = Math.min(cpp>0?Math.floor(sim.saldo_disponible/(t+(config?.costo_operativo||5))):0, sim.recargas_restantes)
+        return acc + gu*rh
+      }, 0)
+    )
+    return Math.max(0, ...ganancias)
+  }, [sims, lotesPorSim, config])
 
   return (
     <div className="page">
       <div className="page-header">
         <span className="page-title">Dashboard</span>
-        <span style={{fontSize:'.8rem',color:'#64748b'}}>{new Date().toLocaleDateString('es',{weekday:'short',day:'numeric',month:'short'})}</span>
+        <span style={{fontSize:'var(--text-xs)',color:'#64748b'}}>{new Date().toLocaleDateString('es',{weekday:'short',day:'numeric',month:'short'})}</span>
       </div>
       <div className="card-grid">
-        <div className="metric"><div className="metric-label">Saldo total</div><div className="metric-value blue">{saldo_total.toLocaleString()}</div><div style={{fontSize:'.72rem',color:'#64748b',marginTop:'.2rem'}}>créditos</div></div>
+        <div className="metric"><div className="metric-label">Saldo total</div><div className="metric-value blue">{saldo_total.toLocaleString()}</div><div style={{fontSize:'var(--text-xs)',color:'#64748b',marginTop:'.2rem'}}>créditos</div></div>
         <div className="metric"><div className="metric-label">Ganancia hoy</div><div className="metric-value green">${ganancia_hoy.toFixed(2)}</div></div>
         <div className="metric"><div className="metric-label">Ganancia total</div><div className="metric-value green">${ganancia_total.toFixed(2)}</div></div>
         <div className="metric"><div className="metric-label">Por cobrar</div><div className="metric-value yellow">${pendiente.toFixed(2)}</div></div>
-        <div className="metric"><div className="metric-label">Recargas hoy</div><div className="metric-value blue">{recargas_hoy}</div><div style={{fontSize:'.72rem',color:'#64748b',marginTop:'.2rem'}}>disponibles</div></div>
+        <div className="metric"><div className="metric-label">Recargas hoy</div><div className="metric-value blue">{recargas_hoy}</div><div style={{fontSize:'var(--text-xs)',color:'#64748b',marginTop:'.2rem'}}>disponibles</div></div>
         <div className="metric"><div className="metric-label">Clientes riesgo</div><div className={`metric-value ${en_riesgo>0?'red':'green'}`}>{en_riesgo}</div></div>
       </div>
 
-      {recientes.length > 0 && <>
-        <div className="section-title">Ventas recientes</div>
-        {recientes.map(v => {
-          const cliente = v.cliente_id ? clientesMap[v.cliente_id] : null
-          const sim = simsMap[v.sim_id]
-          return (
-            <div key={v.id} style={{background:'#0f172a',borderRadius:10,padding:'.8rem 1rem',border:'1px solid #1e293b',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-              <div>
-                <div style={{fontWeight:600,fontSize:'.9rem'}}>{cliente?.nombre || '👤 Sin cliente'}</div>
-                <div style={{fontSize:'.72rem',color:'#64748b',marginTop:'.15rem'}}>{simLabel(sim)||'—'} · {new Date(v.fecha).toLocaleTimeString('es',{hour:'2-digit',minute:'2-digit'})}</div>
-              </div>
-              <div style={{textAlign:'right'}}>
-                <div style={{fontWeight:700}}>{v.cantidad} cr.</div>
-                <div style={{fontSize:'.78rem',color: v.estado_pago==='pagado'?'#22c55e':'#fbbf24'}}>{v.estado_pago==='pagado'?`+$${Number(v.ganancia).toFixed(2)}`:`$${Number(v.precio_venta).toFixed(2)} pend.`}</div>
-              </div>
+      <div className="potencial-card" onClick={()=>setPanelPotencial(true)}>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+          <div>
+            <div style={{fontWeight:700,fontSize:'var(--text-base)'}}>💰 ¿Cuánto puedo ganar hoy?</div>
+            <div style={{fontSize:'var(--text-xs)',color:'#64748b',marginTop:'.2rem'}}>Toca para abrir el simulador</div>
+          </div>
+          <div style={{textAlign:'right'}}>
+            <div style={{fontSize:'1.2rem',fontWeight:800,color:'#22c55e'}}>${maxGanancia.toFixed(2)}</div>
+            <div style={{fontSize:'var(--text-xs)',color:'#64748b'}}>máximo posible</div>
+          </div>
+        </div>
+      </div>
+
+      {panelPotencial && <PanelPotencial sims={sims} lotesPorSim={lotesPorSim} config={config} onClose={()=>setPanelPotencial(false)}/>}
+
+      <div className="section-title">Ventas recientes</div>
+      {recientes.map(v => {
+        const cliente = v.cliente_id ? clientesMap[v.cliente_id] : null
+        const sim = simsMap[v.sim_id]
+        return (
+          <div key={v.id} style={{background:'#0f172a',borderRadius:10,padding:'.8rem 1rem',border:'1px solid #1e293b',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+            <div>
+              <div style={{fontWeight:600,fontSize:'var(--text-base)'}}>{cliente?.nombre || '👤 Sin cliente'}</div>
+              <div style={{fontSize:'var(--text-xs)',color:'#64748b',marginTop:'.15rem'}}>{simLabel(sim)} · {new Date(v.fecha).toLocaleTimeString('es',{hour:'2-digit',minute:'2-digit'})}</div>
             </div>
-          )
-        })}
-      </>}
+            <div style={{textAlign:'right'}}>
+              <div style={{fontWeight:700}}>{v.cantidad} cr.</div>
+              <div style={{fontSize:'var(--text-sm)',color: v.estado_pago==='pagado'?'#22c55e':'#fbbf24'}}>{v.estado_pago==='pagado'?`+$${Number(v.ganancia).toFixed(2)}`:`$${Number(v.precio_venta).toFixed(2)} pend.`}</div>
+            </div>
+          </div>
+        )
+      })}
 
       <div className="section-title">SIMs activas</div>
       {sims.filter(s=>s.activa).map(sim => {
@@ -366,11 +724,17 @@ function Sims({ sims, lotesPorSim, userId, onRefresh }) {
               <div className="sim-stat"><div className="sim-stat-val">{cpp>0?`$${cpp.toFixed(4)}`:'—'}</div><div className="sim-stat-label">costo/créd.</div></div>
             </div>
             <div className="recargas-bar">{dots.map((u,i)=><div key={i} className={`recarga-dot ${u?'used':''}`}/>)}</div>
+            {/* FIX #1 — Advertencia visible si SIM no tiene lotes */}
+            {lotes.length === 0 && (
+              <div className="alert alert-warning" style={{marginTop:'var(--space-md)',fontSize:'var(--text-xs)'}}>
+                ⚠️ Sin lotes cargados — el costo de venta es desconocido
+              </div>
+            )}
             {lotes.length>0&&(
-              <div style={{marginTop:'.8rem'}}>
+              <div style={{marginTop:'var(--space-md)'}}>
                 <div className="section-title" style={{marginBottom:'.4rem'}}>Lotes cargados</div>
                 {lotes.map(l=>(
-                  <div key={l.id} style={{display:'flex',justifyContent:'space-between',fontSize:'.8rem',color:'#94a3b8',padding:'.3rem 0',borderBottom:'1px solid #1e293b'}}>
+                  <div key={l.id} style={{display:'flex',justifyContent:'space-between',fontSize:'var(--text-xs)',color:'#94a3b8',padding:'var(--space-xs) 0',borderBottom:'1px solid #1e293b'}}>
                     <span>{new Date(l.fecha_compra).toLocaleDateString('es')}</span>
                     <span>{Number(l.cantidad).toLocaleString()} cr.</span>
                     <span>${Number(l.costo_total).toFixed(2)}</span>
@@ -410,6 +774,11 @@ function Clientes({ clientes, config, userId, onRefresh }) {
   const [modal, setModal] = useState(false)
   const [buscar, setBuscar] = useState('')
 
+  // FIX #9 — Memoizar cálculo de riesgos
+  const riesgosMap = useMemo(() =>
+    Object.fromEntries(clientes.map(c => [c.id, calcularRiesgo(c, config)]))
+  , [clientes, config])
+
   const filtrados = clientes.filter(c =>
     c.nombre.toLowerCase().includes(buscar.toLowerCase()) ||
     (c.telefono||'').includes(buscar)
@@ -424,7 +793,7 @@ function Clientes({ clientes, config, userId, onRefresh }) {
       </div>
       <input value={buscar} onChange={e=>setBuscar(e.target.value)} placeholder="🔍 Buscar..."/>
       {filtrados.map(c => {
-        const { nivel } = calcularRiesgo(c, config)
+        const { nivel } = riesgosMap[c.id] || calcularRiesgo(c, config)
         return (
           <div key={c.id} className="list-item">
             <div style={{width:40,height:40,borderRadius:'50%',background:'#1e293b',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'1.1rem',flexShrink:0}}>{c.nombre.charAt(0).toUpperCase()}</div>
@@ -433,7 +802,7 @@ function Clientes({ clientes, config, userId, onRefresh }) {
               <div className="list-item-sub">{c.telefono||'Sin teléfono'} · {c.total_compras} compras</div>
             </div>
             <div style={{textAlign:'right'}}>
-              {c.deuda_total>0&&<div style={{color:'#fbbf24',fontWeight:700,fontSize:'.9rem'}}>${Number(c.deuda_total).toFixed(2)}</div>}
+              {c.deuda_total>0&&<div style={{color:'#fbbf24',fontWeight:700,fontSize:'var(--text-base)'}}>${Number(c.deuda_total).toFixed(2)}</div>}
               <span className={`badge ${nivelColor[nivel]}`}>{nivel}</span>
             </div>
           </div>
@@ -455,10 +824,10 @@ function Clientes({ clientes, config, userId, onRefresh }) {
 
 // ── VENTAS ────────────────────────────────────────────────
 function Ventas({ sims, clientes: clientesIniciales, lotesPorSim, config, userId, onRefresh }) {
-  const [paso, setPaso] = useState(1) // 1=tipo 2=sim 3=cliente 4=resumen
+  const [paso, setPaso] = useState(1)
   const [tipo, setTipo] = useState(null)
   const [simSel, setSimSel] = useState(null)
-  const [clienteSel, setClienteSel] = useState(null) // null = sin cliente
+  const [clienteSel, setClienteSel] = useState(null)
   const [clientes, setClientes] = useState(clientesIniciales)
   const [buscar, setBuscar] = useState('')
   const [creandoCliente, setCreandoCliente] = useState(false)
@@ -466,26 +835,29 @@ function Ventas({ sims, clientes: clientesIniciales, lotesPorSim, config, userId
   const [loading, setLoading] = useState(false)
   const [err, setErr] = useState('')
   const [ok, setOk] = useState('')
+  // FIX #6 — Estado para modal de confirmación de riesgo alto
+  const [clienteRiesgoAlto, setClienteRiesgoAlto] = useState(null)
 
-  // Sincronizar clientes si cambian externamente
   useEffect(() => { setClientes(clientesIniciales) }, [clientesIniciales])
 
   const costo_op = config?.costo_operativo || 5
 
-  // SIMs candidatas para el tipo seleccionado
-  const simsDisponibles = sims.filter(s =>
+  // FIX #10 — cpp pre-calculado, ya disponible como prop derivado
+  const simsDisponibles = useMemo(() => sims.filter(s =>
     s.activa && s.recargas_restantes > 0 && s.saldo_disponible >= (tipo||0) + costo_op
   ).map(s => {
     const cpp = cppSim(lotesPorSim[s.id] || [])
     const costo_real = +(cpp * (tipo||0)).toFixed(4)
     const precio = precioSugerido(costo_real, tipo||120, config)
     const ganancia = +(precio - costo_real - costo_op).toFixed(2)
-    return { ...s, cpp, costo_real, precio, ganancia }
-  }).sort((a,b) => b.ganancia - a.ganancia)
+    const sin_lotes = (lotesPorSim[s.id]||[]).length === 0
+    return { ...s, cpp, costo_real, precio, ganancia, sin_lotes }
+  }).sort((a,b) => b.ganancia - a.ganancia), [sims, lotesPorSim, tipo, config])
 
   function reset() {
     setPaso(1); setTipo(null); setSimSel(null); setClienteSel(null)
     setBuscar(''); setCreandoCliente(false); setPrecioEdit(''); setErr(''); setOk('')
+    setClienteRiesgoAlto(null)
   }
 
   function selTipo(t) {
@@ -502,14 +874,38 @@ function Ventas({ sims, clientes: clientesIniciales, lotesPorSim, config, userId
     setClienteSel(null); setPaso(4)
   }
 
+  // FIX #6 — Verificar riesgo antes de avanzar
   function selCliente(c) {
-    setClienteSel(c); setBuscar(''); setPaso(4)
+    setBuscar('')
+    const { nivel } = calcularRiesgo(c, config)
+    if (nivel === 'alto') {
+      setClienteRiesgoAlto(c)
+    } else {
+      setClienteSel(c)
+      setPaso(4)
+    }
+  }
+
+  function confirmarClienteRiesgo() {
+    setClienteSel(clienteRiesgoAlto)
+    setClienteRiesgoAlto(null)
+    setPaso(4)
   }
 
   async function confirmar() {
     if (!simSel) return
+    // FIX #2 — Validar precio como número válido antes de confirmar
+    const precio = parseFloat(precioEdit)
+    if (!precioEdit || isNaN(precio) || precio <= 0) {
+      setErr('Ingresa un precio de venta válido')
+      return
+    }
+    // FIX #1 — Bloquear venta si SIM no tiene lotes (costo = 0)
+    if (simSel.sin_lotes) {
+      const continuar = window.confirm('⚠️ Esta SIM no tiene lotes cargados. El costo real es 0 y la ganancia calculada no es confiable. ¿Deseas continuar de todas formas?')
+      if (!continuar) return
+    }
     setLoading(true); setErr('')
-    const precio = parseFloat(precioEdit) || simSel.precio
     const { error } = await sb.rpc('registrar_venta', {
       p_cliente_id: clienteSel?.id || null,
       p_sim_id: simSel.id,
@@ -520,6 +916,7 @@ function Ventas({ sims, clientes: clientesIniciales, lotesPorSim, config, userId
     if (error) { setErr(error.message); setLoading(false); return }
     const ganancia = precio - simSel.costo_real - costo_op
     setOk(`✅ Venta registrada. Ganancia: $${ganancia.toFixed(2)}`)
+    // FIX #10 — Solo refrescar lo necesario
     onRefresh()
     setTimeout(reset, 2500)
     setLoading(false)
@@ -533,7 +930,9 @@ function Ventas({ sims, clientes: clientesIniciales, lotesPorSim, config, userId
 
   if (ok) return (
     <div className="page" style={{justifyContent:'center',alignItems:'center',minHeight:'60vh'}}>
-      <div className="alert alert-success" style={{textAlign:'center',fontSize:'1rem',padding:'1.5rem'}}>{ok}</div>
+      <div className="alert alert-success" style={{textAlign:'center',fontSize:'var(--text-md)',padding:'var(--space-xl)'}}>
+        {ok}
+      </div>
     </div>
   )
 
@@ -541,6 +940,15 @@ function Ventas({ sims, clientes: clientesIniciales, lotesPorSim, config, userId
 
   return (
     <div className="page">
+      {/* FIX #6 — Modal de riesgo alto */}
+      {clienteRiesgoAlto && (
+        <ModalRiesgoAlto
+          cliente={clienteRiesgoAlto}
+          onConfirmar={confirmarClienteRiesgo}
+          onCancelar={()=>setClienteRiesgoAlto(null)}
+        />
+      )}
+
       <div className="page-header">
         <span className="page-title">{titulos[paso]}</span>
         {paso>1&&<button className="btn btn-secondary btn-sm" onClick={()=>setPaso(p=>p-1)}>← Atrás</button>}
@@ -549,16 +957,16 @@ function Ventas({ sims, clientes: clientesIniciales, lotesPorSim, config, userId
 
       {/* PASO 1 — Tipo de recarga */}
       {paso===1&&(
-        <div style={{display:'flex',gap:'.8rem',marginTop:'.5rem'}}>
+        <div style={{display:'flex',gap:'var(--space-md)',marginTop:'var(--space-sm)'}}>
           {[120,240,360].map(t => {
             const disponible = sims.some(s=>s.activa&&s.recargas_restantes>0&&s.saldo_disponible>=t+costo_op)
             return (
               <button key={t} className={`tipo-btn ${tipo===t?'selected':''}`}
-                style={!disponible?{opacity:.4,cursor:'not-allowed'}:{}}
+                disabled={!disponible}
                 onClick={()=>disponible&&selTipo(t)}>
                 <div style={{fontSize:'1.4rem',fontWeight:800}}>{t}</div>
-                <div style={{fontSize:'.7rem',color:'#64748b',marginTop:'.3rem'}}>créditos</div>
-                {!disponible&&<div style={{fontSize:'.65rem',color:'#ef4444',marginTop:'.3rem'}}>Sin saldo</div>}
+                <div style={{fontSize:'var(--text-xs)',color:'#64748b',marginTop:'var(--space-xs)'}}>créditos</div>
+                {!disponible&&<div style={{fontSize:'var(--text-xs)',color:'#ef4444',marginTop:'var(--space-xs)'}}>Sin saldo</div>}
               </button>
             )
           })}
@@ -577,20 +985,24 @@ function Ventas({ sims, clientes: clientesIniciales, lotesPorSim, config, userId
                     className={`sim-select-card ${simSel?.id===sim.id?'selected':''}`}
                     onClick={()=>selSim(sim)}>
                     <div style={{flex:1}}>
-                      <div style={{display:'flex',alignItems:'center',gap:'.5rem'}}>
+                      <div style={{display:'flex',alignItems:'center',gap:'var(--space-sm)'}}>
                         <span style={{fontWeight:700,color:'#38bdf8'}}>📱 {simLabel(sim)}</span>
                         {idx===0&&<span className="badge badge-green">Recomendada</span>}
                       </div>
-                      {sim.nombre&&<div style={{fontSize:'.75rem',color:'#64748b',marginTop:'.1rem'}}>{sim.numero}</div>}
-                      <div style={{display:'flex',gap:'1rem',marginTop:'.4rem',fontSize:'.82rem',color:'#94a3b8'}}>
+                      {sim.nombre&&<div style={{fontSize:'var(--text-xs)',color:'#64748b',marginTop:'.1rem'}}>{sim.numero}</div>}
+                      {/* FIX #1 — Advertencia de sin lotes en selección de SIM */}
+                      {sim.sin_lotes && (
+                        <div style={{fontSize:'var(--text-xs)',color:'#fbbf24',marginTop:'.2rem'}}>⚠️ Sin lotes — ganancia estimada no confiable</div>
+                      )}
+                      <div style={{display:'flex',gap:'1rem',marginTop:'.4rem',fontSize:'var(--text-sm)',color:'#94a3b8'}}>
                         <span>{Number(sim.saldo_disponible).toLocaleString()} cr.</span>
                         <span>{sim.recargas_restantes}/{sim.limite_diario} recargas</span>
                       </div>
-                      <div className="recargas-bar" style={{marginTop:'.5rem'}}>{dots.map((u,i)=><div key={i} className={`recarga-dot ${u?'used':''}`}/>)}</div>
+                      <div className="recargas-bar" style={{marginTop:'var(--space-sm)'}}>{dots.map((u,i)=><div key={i} className={`recarga-dot ${u?'used':''}`}/>)}</div>
                     </div>
                     <div style={{textAlign:'right',flexShrink:0}}>
-                      <div style={{color:'#22c55e',fontWeight:700,fontSize:'1rem'}}>${sim.ganancia.toFixed(2)}</div>
-                      <div style={{fontSize:'.72rem',color:'#64748b'}}>ganancia</div>
+                      <div style={{color:sim.sin_lotes?'#fbbf24':'#22c55e',fontWeight:700,fontSize:'var(--text-md)'}}>{sim.sin_lotes?'?':''}{sim.sin_lotes?'':'$'}{sim.sin_lotes?'Sin costo':`${sim.ganancia.toFixed(2)}`}</div>
+                      <div style={{fontSize:'var(--text-xs)',color:'#64748b'}}>ganancia</div>
                     </div>
                   </div>
                 )
@@ -606,7 +1018,11 @@ function Ventas({ sims, clientes: clientesIniciales, lotesPorSim, config, userId
             ? <FormNuevoCliente
                 userId={userId}
                 onCreado={c => {
-                  setClientes(prev => [...prev, c])
+                  setClientes(prev => {
+                    // Evitar duplicados si ya existe por id
+                    if (prev.find(x => x.id === c.id)) return prev
+                    return [...prev, c]
+                  })
                   setClienteSel(c)
                   setCreandoCliente(false)
                   setPaso(4)
@@ -615,7 +1031,7 @@ function Ventas({ sims, clientes: clientesIniciales, lotesPorSim, config, userId
               />
             : <>
                 <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-                  <span style={{fontSize:'.85rem',color:'#94a3b8'}}>Selecciona o crea un cliente</span>
+                  <span style={{fontSize:'var(--text-sm)',color:'#94a3b8'}}>Selecciona o crea un cliente</span>
                   <button className="btn btn-secondary btn-sm" onClick={saltarCliente}>Sin cliente →</button>
                 </div>
                 <input value={buscar} onChange={e=>setBuscar(e.target.value)} placeholder="🔍 Buscar cliente..."/>
@@ -641,20 +1057,57 @@ function Ventas({ sims, clientes: clientesIniciales, lotesPorSim, config, userId
 
       {/* PASO 4 — Resumen y confirmación */}
       {paso===4&&simSel&&(()=>{
-        const precio = parseFloat(precioEdit)||simSel.precio
-        const ganancia = precio - simSel.costo_real - costo_op
+        // FIX #2 — Calcular ganancia de forma segura, con NaN guard
+        const precio = parseFloat(precioEdit)
+        const precioValido = !isNaN(precio) && precio > 0
+        const ganancia = precioValido ? precio - simSel.costo_real - costo_op : null
         return (
           <>
+            {/* FIX #8 — Botón confirmar ARRIBA del form para evitar que teclado lo tape */}
+            <div className="form-group">
+              <label>Precio de venta</label>
+              <input
+                type="number"
+                value={precioEdit}
+                onChange={e=>{ setPrecioEdit(e.target.value); setErr('') }}
+                placeholder="Ingresa el precio"
+                inputMode="decimal"
+              />
+              {!precioValido && precioEdit !== '' && (
+                <div style={{fontSize:'var(--text-xs)',color:'#ef4444',marginTop:'var(--space-xs)'}}>⚠️ Ingresa un precio válido mayor a 0</div>
+              )}
+            </div>
+
             <div className="resumen-box">
               <div className="resumen-row"><span style={{color:'#64748b'}}>Cliente</span><span style={{fontWeight:600}}>{clienteSel?.nombre||<span style={{color:'#475569'}}>Sin cliente</span>}</span></div>
               <div className="resumen-row"><span style={{color:'#64748b'}}>Recarga</span><span style={{fontWeight:600}}>{tipo} créditos</span></div>
               <div className="resumen-row"><span style={{color:'#64748b'}}>SIM</span><span style={{fontWeight:600,color:'#38bdf8'}}>📱 {simLabel(simSel)}</span></div>
-              <div className="resumen-row"><span style={{color:'#64748b'}}>Costo real</span><span>${simSel.costo_real.toFixed(4)}</span></div>
-              <div className="resumen-row highlight"><span>Ganancia estimada</span><span style={{color:ganancia>=0?'#22c55e':'#ef4444'}}>${ganancia.toFixed(2)}</span></div>
+              <div className="resumen-row"><span style={{color:'#64748b'}}>Costo real</span><span>{simSel.costo_real.toFixed(4)}</span></div>
+              <div className="resumen-row highlight">
+                <span>Ganancia estimada</span>
+                <span style={{color: ganancia === null ? '#64748b' : ganancia>=0?'#22c55e':'#ef4444'}}>
+                  {ganancia === null ? '—' : `$${ganancia.toFixed(2)}`}
+                </span>
+              </div>
             </div>
-            {ganancia<0&&<div className="alert alert-warning">⚠️ Este precio genera pérdida.</div>}
-            <div className="form-group"><label>Precio de venta</label><input type="number" value={precioEdit} onChange={e=>setPrecioEdit(e.target.value)}/></div>
-            <button className="btn btn-primary" onClick={confirmar} disabled={loading}>{loading?<span className="spinner"/>:'✅ Confirmar venta'}</button>
+
+            {/* FIX #1 — Advertencia bloqueante si sin lotes */}
+            {simSel.sin_lotes && (
+              <div className="alert alert-warning">
+                ⚠️ Esta SIM no tiene lotes cargados. La ganancia mostrada no es confiable. Carga un lote antes de vender para datos precisos.
+              </div>
+            )}
+            {ganancia !== null && ganancia < 0 && (
+              <div className="alert alert-warning">⚠️ Este precio genera pérdida.</div>
+            )}
+
+            <button
+              className="btn btn-primary"
+              onClick={confirmar}
+              disabled={loading || !precioValido}
+            >
+              {loading ? <span className="spinner"/> : '✅ Confirmar venta'}
+            </button>
           </>
         )
       })()}
@@ -666,11 +1119,15 @@ function Ventas({ sims, clientes: clientesIniciales, lotesPorSim, config, userId
 function Historial({ ventas, sims, clientes, onRefresh }) {
   const [filtro, setFiltro] = useState('todos')
   const [loading, setLoading] = useState(null)
-  const simsMap = Object.fromEntries(sims.map(s=>[s.id,s]))
-  const clientesMap = Object.fromEntries(clientes.map(c=>[c.id,c]))
-  const filtradas = [...ventas]
+
+  // FIX #11 — useMemo para mapas en Historial
+  const simsMap = useMemo(() => Object.fromEntries(sims.map(s=>[s.id,s])), [sims])
+  const clientesMap = useMemo(() => Object.fromEntries(clientes.map(c=>[c.id,c])), [clientes])
+
+  const filtradas = useMemo(() => [...ventas]
     .filter(v=>filtro==='todos'||v.estado_pago===filtro)
     .sort((a,b)=>new Date(b.fecha)-new Date(a.fecha))
+  , [ventas, filtro])
 
   async function cobrar(v) {
     setLoading(v.id)
@@ -684,7 +1141,7 @@ function Historial({ ventas, sims, clientes, onRefresh }) {
       <div className="page-header"><span className="page-title">Historial</span></div>
       <div style={{display:'flex',gap:'.4rem'}}>
         {['todos','pendiente','pagado'].map(f=>(
-          <button key={f} onClick={()=>setFiltro(f)} style={{padding:'.4rem .9rem',borderRadius:'999px',border:'1.5px solid',fontSize:'.8rem',cursor:'pointer',fontWeight:600,borderColor:filtro===f?'#38bdf8':'#334155',background:filtro===f?'#0c2a4a':'transparent',color:filtro===f?'#38bdf8':'#64748b'}}>
+          <button key={f} onClick={()=>setFiltro(f)} style={{padding:'.4rem .9rem',borderRadius:'999px',border:'1.5px solid',fontSize:'var(--text-xs)',cursor:'pointer',fontWeight:600,borderColor:filtro===f?'#38bdf8':'#334155',background:filtro===f?'#0c2a4a':'transparent',color:filtro===f?'#38bdf8':'#64748b'}}>
             {f.charAt(0).toUpperCase()+f.slice(1)}
           </button>
         ))}
@@ -693,20 +1150,20 @@ function Historial({ ventas, sims, clientes, onRefresh }) {
         const cliente = v.cliente_id ? clientesMap[v.cliente_id] : null
         const sim = simsMap[v.sim_id]
         return (
-          <div key={v.id} className="list-item" style={{flexDirection:'column',gap:'.5rem',alignItems:'stretch'}}>
+          <div key={v.id} className="list-item" style={{flexDirection:'column',gap:'var(--space-sm)',alignItems:'stretch'}}>
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
               <div>
                 <div style={{fontWeight:700}}>{cliente?.nombre||<span style={{color:'#475569'}}>Sin cliente</span>}</div>
-                <div style={{fontSize:'.75rem',color:'#64748b'}}>{new Date(v.fecha).toLocaleString('es',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})} · {sim?simLabel(sim):'—'}</div>
+                <div style={{fontSize:'var(--text-xs)',color:'#64748b'}}>{new Date(v.fecha).toLocaleString('es',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})} · {sim?simLabel(sim):'—'}</div>
               </div>
               <div style={{textAlign:'right'}}>
                 <div style={{fontWeight:700}}>{v.cantidad} cr.</div>
-                <div style={{fontSize:'.8rem',color:'#64748b'}}>${Number(v.precio_venta).toFixed(2)}</div>
+                <div style={{fontSize:'var(--text-xs)',color:'#64748b'}}>${Number(v.precio_venta).toFixed(2)}</div>
               </div>
             </div>
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
               <span className={`badge ${v.estado_pago==='pagado'?'badge-green':'badge-yellow'}`}>{v.estado_pago}</span>
-              <span style={{fontSize:'.8rem',color:'#22c55e',fontWeight:600}}>+${Number(v.ganancia).toFixed(2)}</span>
+              <span style={{fontSize:'var(--text-sm)',color:'#22c55e',fontWeight:600}}>+${Number(v.ganancia).toFixed(2)}</span>
               {v.estado_pago==='pendiente'&&(
                 <button className="btn btn-success btn-sm" onClick={()=>cobrar(v)} disabled={loading===v.id}>
                   {loading===v.id?<span className="spinner"/>:'✓ Cobrado'}
@@ -730,6 +1187,7 @@ function App() {
   const [clientes, setClientes] = useState([])
   const [ventas, setVentas] = useState([])
   const [config, setConfig] = useState(null)
+  // FIX #3 — Flag de carga como ref con reset garantizado en finally
   const cargando = useRef(false)
 
   useEffect(() => {
@@ -740,15 +1198,25 @@ function App() {
     return () => subscription.unsubscribe()
   }, [])
 
-  async function cargar() {
+  // FIX #3 — finally garantiza que el flag se libere siempre
+  // FIX #10 — Función de carga completa
+  const cargar = useCallback(async () => {
     if (cargando.current) return
     cargando.current = true
     try {
-      const { data:s } = await sb.from('sims').select('*').eq('activa',true).order('created_at')
-      const { data:l } = await sb.from('lotes_saldo').select('*').order('fecha_compra')
-      const { data:c } = await sb.from('clientes').select('*').order('nombre')
-      const { data:v } = await sb.from('ventas').select('*').order('fecha',{ascending:false})
-      const { data:cfg } = await sb.from('configuracion').select('*').maybeSingle()
+      const [
+        { data: s },
+        { data: l },
+        { data: c },
+        { data: v },
+        { data: cfg }
+      ] = await Promise.all([
+        sb.from('sims').select('*').eq('activa',true).order('created_at'),
+        sb.from('lotes_saldo').select('*').order('fecha_compra'),
+        sb.from('clientes').select('*').order('nombre'),
+        sb.from('ventas').select('*').order('fecha',{ascending:false}),
+        sb.from('configuracion').select('*').maybeSingle()
+      ])
       setSims(s||[])
       const por_sim = {}
       ;(l||[]).forEach(x=>{ if(!por_sim[x.sim_id]) por_sim[x.sim_id]=[]; por_sim[x.sim_id].push(x) })
@@ -756,10 +1224,13 @@ function App() {
       setClientes(c||[])
       setVentas(v||[])
       setConfig(cfg)
-    } finally { cargando.current = false }
-  }
+    } finally {
+      // FIX #3 — siempre se libera el flag, incluso si hay error
+      cargando.current = false
+    }
+  }, [])
 
-  useEffect(() => { if (user) cargar() }, [user])
+  useEffect(() => { if (user) cargar() }, [user, cargar])
 
   async function logout() {
     await sb.auth.signOut()
@@ -792,9 +1263,9 @@ function App() {
         {tab==='historial' && <Historial ventas={ventas} sims={sims} clientes={clientes} onRefresh={cargar}/>}
       </div>
       <div>
-        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'.3rem .8rem',background:'#0f172a',borderTop:'1px solid #1e293b'}}>
-          <span style={{fontSize:'.72rem',color:'#475569'}}>{user.email}</span>
-          <button onClick={logout} style={{background:'none',border:'none',color:'#64748b',fontSize:'.75rem',cursor:'pointer'}}>Cerrar sesión</button>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'var(--space-xs) var(--space-md)',background:'#0f172a',borderTop:'1px solid #1e293b'}}>
+          <span style={{fontSize:'var(--text-xs)',color:'#475569'}}>{user.email}</span>
+          <button onClick={logout} style={{background:'none',border:'none',color:'#64748b',fontSize:'var(--text-xs)',cursor:'pointer'}}>Cerrar sesión</button>
         </div>
         <nav className="nav">
           {navItems.map(n=>(
