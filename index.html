@@ -170,8 +170,8 @@ function cppSim(lotes) {
 }
 
 function precioSugerido(costo_real, tipo, config) {
-  const m = { 120: config?.margen_tipo_120||25, 240: config?.margen_tipo_240||20, 360: config?.margen_tipo_360||15 }
-  return +(costo_real * (1 + m[tipo] / 100)).toFixed(2)
+  const margen = config?.[`margen_tipo_${tipo}`] ?? { 120: 25, 240: 20, 360: 15 }[tipo] ?? 20
+  return +(costo_real * (1 + margen / 100)).toFixed(2)
 }
 
 function simLabel(sim) {
@@ -233,7 +233,7 @@ function PanelPotencial({ sims, lotesPorSim, config, onClose }) {
   const [verMeta, setVerMeta] = useState(false)
 
   const costo_op = config?.costo_operativo || 5
-  const margenes = { 120: config?.margen_tipo_120||25, 240: config?.margen_tipo_240||20, 360: config?.margen_tipo_360||15 }
+  const getMargenes = (t) => config?.[`margen_tipo_${t}`] ?? { 120: 25, 240: 20, 360: 15 }[t] ?? 20
 
   function calcularSim(sim, t) {
     const lotes = lotesPorSim[sim.id] || []
@@ -243,7 +243,7 @@ function PanelPotencial({ sims, lotesPorSim, config, onClose }) {
     const precio_minimo = +(costo_real + costo_op).toFixed(2)
     const precio_usado = parseFloat(precio) || precio_sugerido
     const ganancia_unitaria = +(precio_usado - costo_real - costo_op).toFixed(2)
-    const recargas_por_saldo = cpp > 0 ? Math.floor(sim.saldo_disponible / (t + costo_op)) : 0
+    const recargas_por_saldo = cpp > 0 ? Math.floor(sim.saldo_disponible / (cpp * t)) : 0
     const recargas_hoy = Math.min(recargas_por_saldo, sim.recargas_restantes)
     const ganancia_hoy = +(ganancia_unitaria * recargas_hoy).toFixed(2)
     const sin_lotes = lotes.length === 0
@@ -296,7 +296,7 @@ function PanelPotencial({ sims, lotesPorSim, config, onClose }) {
   const iconLimitante = { verde:'🟢', amarillo:'🟡', rojo:'🔴', gris:'⚫' }
 
   const metaNum = parseFloat(meta) || 0
-  const gananciaUnitaria = simsActivas.length > 0 ? calcularSim(simsActivas[0], tipo).ganancia_unitaria : 0
+  const gananciaUnitaria = totalActual.recargas > 0 ? totalActual.ganancia / totalActual.recargas : 0
   const recargasParaMeta = gananciaUnitaria > 0 ? Math.ceil(metaNum / gananciaUnitaria) : 0
   const recargasDisponibles = totalActual.recargas
   const faltanRecargas = Math.max(recargasParaMeta - recargasDisponibles, 0)
@@ -518,7 +518,7 @@ function Auth({ onAuth }) {
     if (tab === 'login') {
       const { data, error } = await sb.auth.signInWithPassword({ email, password: pass })
       if (error) setErr(error.message)
-      else onAuth(data.user)
+      else onAuth(data.session?.user ?? data.user)
     } else {
       const { error } = await sb.auth.signUp({ email, password: pass })
       if (error) setErr(error.message)
@@ -539,8 +539,8 @@ function Auth({ onAuth }) {
       </div>
       {err && <div className="alert alert-error">{err}</div>}
       {ok && <div className="alert alert-success">{ok}</div>}
-      <div className="form-group"><label>Correo</label><input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="correo@ejemplo.com"/></div>
-      <div className="form-group"><label>Contraseña</label><input type="password" value={pass} onChange={e=>setPass(e.target.value)} placeholder="••••••••" onKeyDown={e=>e.key==='Enter'&&submit()}/></div>
+      <div className="form-group"><label>Correo</label><input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="correo@ejemplo.com" autoComplete="email" onKeyDown={e=>e.key==='Enter'&&submit()}/></div>
+      <div className="form-group"><label>Contraseña</label><input type="password" value={pass} onChange={e=>setPass(e.target.value)} placeholder="••••••••" autoComplete={tab==='login'?'current-password':'new-password'} onKeyDown={e=>e.key==='Enter'&&submit()}/></div>
       <button className="btn btn-primary" onClick={submit} disabled={loading}>{loading?<span className="spinner"/>:tab==='login'?'Entrar':'Crear cuenta'}</button>
     </div>
   )
@@ -582,7 +582,7 @@ function Dashboard({ sims, ventas, lotesPorSim, clientes, config, onVender }) {
         const cr = +(cpp*t).toFixed(4)
         const ps = +(cr*(1+(config?.[`margen_tipo_${t}`]||20)/100)).toFixed(2)
         const gu = +(ps-cr-(config?.costo_operativo||5)).toFixed(2)
-        const rh = Math.min(cpp>0?Math.floor(sim.saldo_disponible/(t+(config?.costo_operativo||5))):0, sim.recargas_restantes)
+        const rh = Math.min(cpp>0?Math.floor(sim.saldo_disponible/(cpp*t)):0, sim.recargas_restantes)
         return acc + gu*rh
       }, 0)
     )
@@ -951,7 +951,10 @@ function Ventas({ sims, clientes: clientesIniciales, lotesPorSim, config, userId
 
       <div className="page-header">
         <span className="page-title">{titulos[paso]}</span>
-        {paso>1&&<button className="btn btn-secondary btn-sm" onClick={()=>setPaso(p=>p-1)}>← Atrás</button>}
+        {paso>1&&<button className="btn btn-secondary btn-sm" onClick={()=>{
+          if (paso===3) setSimSel(null)
+          setPaso(p=>p-1)
+        }}>← Atrás</button>}
       </div>
       {err&&<div className="alert alert-error">{err}</div>}
 
@@ -1001,7 +1004,9 @@ function Ventas({ sims, clientes: clientesIniciales, lotesPorSim, config, userId
                       <div className="recargas-bar" style={{marginTop:'var(--space-sm)'}}>{dots.map((u,i)=><div key={i} className={`recarga-dot ${u?'used':''}`}/>)}</div>
                     </div>
                     <div style={{textAlign:'right',flexShrink:0}}>
-                      <div style={{color:sim.sin_lotes?'#fbbf24':'#22c55e',fontWeight:700,fontSize:'var(--text-md)'}}>{sim.sin_lotes?'?':''}{sim.sin_lotes?'':'$'}{sim.sin_lotes?'Sin costo':`${sim.ganancia.toFixed(2)}`}</div>
+                      <div style={{color:sim.sin_lotes?'#fbbf24':'#22c55e',fontWeight:700,fontSize:'var(--text-md)'}}>
+                        {sim.sin_lotes ? '?' : `$${sim.ganancia.toFixed(2)}`}
+                      </div>
                       <div style={{fontSize:'var(--text-xs)',color:'#64748b'}}>ganancia</div>
                     </div>
                   </div>
@@ -1049,7 +1054,7 @@ function Ventas({ sims, clientes: clientesIniciales, lotesPorSim, config, userId
                     </div>
                   )
                 })}
-                {clientes.length===0&&<div className="empty" style={{padding:'1rem'}}>Sin clientes registrados</div>}
+                {filtrados.length===0&&<div className="empty" style={{padding:'1rem'}}>{buscar?'Sin resultados para tu búsqueda':'Sin clientes registrados'}</div>}
               </>
           }
         </>
@@ -1082,7 +1087,7 @@ function Ventas({ sims, clientes: clientesIniciales, lotesPorSim, config, userId
               <div className="resumen-row"><span style={{color:'#64748b'}}>Cliente</span><span style={{fontWeight:600}}>{clienteSel?.nombre||<span style={{color:'#475569'}}>Sin cliente</span>}</span></div>
               <div className="resumen-row"><span style={{color:'#64748b'}}>Recarga</span><span style={{fontWeight:600}}>{tipo} créditos</span></div>
               <div className="resumen-row"><span style={{color:'#64748b'}}>SIM</span><span style={{fontWeight:600,color:'#38bdf8'}}>📱 {simLabel(simSel)}</span></div>
-              <div className="resumen-row"><span style={{color:'#64748b'}}>Costo real</span><span>{simSel.costo_real.toFixed(4)}</span></div>
+              <div className="resumen-row"><span style={{color:'#64748b'}}>Costo real</span><span>${simSel.costo_real.toFixed(4)}</span></div>
               <div className="resumen-row highlight">
                 <span>Ganancia estimada</span>
                 <span style={{color: ganancia === null ? '#64748b' : ganancia>=0?'#22c55e':'#ef4444'}}>
@@ -1129,16 +1134,20 @@ function Historial({ ventas, sims, clientes, onRefresh }) {
     .sort((a,b)=>new Date(b.fecha)-new Date(a.fecha))
   , [ventas, filtro])
 
+  const [errCobro, setErrCobro] = useState('')
+
   async function cobrar(v) {
-    setLoading(v.id)
+    setLoading(v.id); setErrCobro('')
     const { error } = await sb.rpc('marcar_pago', { p_venta_id: v.id })
-    if (!error) onRefresh()
+    if (error) setErrCobro(error.message)
+    else onRefresh()
     setLoading(null)
   }
 
   return (
     <div className="page">
       <div className="page-header"><span className="page-title">Historial</span></div>
+      {errCobro && <div className="alert alert-error">{errCobro}</div>}
       <div style={{display:'flex',gap:'.4rem'}}>
         {['todos','pendiente','pagado'].map(f=>(
           <button key={f} onClick={()=>setFiltro(f)} style={{padding:'.4rem .9rem',borderRadius:'999px',border:'1.5px solid',fontSize:'var(--text-xs)',cursor:'pointer',fontWeight:600,borderColor:filtro===f?'#38bdf8':'#334155',background:filtro===f?'#0c2a4a':'transparent',color:filtro===f?'#38bdf8':'#64748b'}}>
